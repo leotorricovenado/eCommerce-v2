@@ -1,7 +1,7 @@
 import { createContext, useContext, useState, type ReactNode } from "react"
 
 import { quoteCart, type Quote } from "@/data/priceRules"
-import { TIERS, pointsForNet } from "@/data/venadoMoney"
+import { TIERS, pointsForQuote } from "@/data/venadoMoney"
 
 /**
  * Pasos del canal de autogestión (kickoff DEAL, diapositiva 6 — flujo PREPAGO): el pago va
@@ -93,7 +93,7 @@ function seedOrders(now: Date): Order[] {
       id,
       createdAt,
       quote,
-      pointsEarned: pointsForNet(quote.net, TIERS[0]!),
+      pointsEarned: pointsForQuote(quote, TIERS[0]!),
       pointsUsed: 0,
       deliveryPointId,
       deliveryDate,

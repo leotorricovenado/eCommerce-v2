@@ -1,6 +1,6 @@
 import { createContext, useContext, useMemo, useState, type ReactNode } from "react"
 
-import { progressToNext, tierFor, type Tier } from "@/data/venadoMoney"
+import { expiryFor, progressToNext, tierFor, type Tier } from "@/data/venadoMoney"
 
 export type MovementKind = "abono" | "debito"
 
@@ -14,6 +14,16 @@ export interface PointsMovement {
   description: string
 }
 
+/** Lote de puntos ganados en un abono, con lo que le queda sin canjear y su vencimiento. */
+export interface PointsLot {
+  movementId: string
+  earned: number
+  remaining: number
+  earnedAt: Date
+  expiresAt: Date
+  orderId: number
+}
+
 interface PointsContextValue {
   balance: number
   /** Puntos acumulados históricos (suma de abonos) — define el nivel. */
@@ -21,6 +31,10 @@ interface PointsContextValue {
   tier: Tier
   progress: ReturnType<typeof progressToNext>
   movements: PointsMovement[]
+  /** Lotes con saldo, del más viejo al más nuevo (los canjes consumen FIFO). */
+  lots: PointsLot[]
+  /** Próximo lote en vencer (el más viejo con saldo), si hay. */
+  nextExpiry: PointsLot | null
   earn: (points: number, orderId: number) => void
   redeem: (points: number, orderId: number) => void
 }
@@ -62,10 +76,30 @@ function seedMovements(now: Date): PointsMovement[] {
   ]
 }
 
+/** Reconstruye los lotes aplicando los débitos FIFO (primero vencen/se consumen los más viejos). */
+function buildLots(movements: PointsMovement[]): PointsLot[] {
+  const chronological = [...movements].sort((a, b) => a.at.getTime() - b.at.getTime())
+  const lots: PointsLot[] = []
+  for (const m of chronological) {
+    if (m.kind === "abono") {
+      lots.push({ movementId: m.id, earned: m.points, remaining: m.points, earnedAt: m.at, expiresAt: expiryFor(m.at), orderId: m.orderId })
+      continue
+    }
+    let left = m.points
+    for (const lot of lots) {
+      if (left <= 0) break
+      const take = Math.min(lot.remaining, left)
+      lot.remaining -= take
+      left -= take
+    }
+  }
+  return lots
+}
+
 export function PointsProvider({ children }: { children: ReactNode }) {
   const [movements, setMovements] = useState<PointsMovement[]>(() => seedMovements(new Date()))
 
-  const { balance, lifetime } = useMemo(() => {
+  const { balance, lifetime, lots } = useMemo(() => {
     let balance = 0
     let lifetime = 0
     for (const m of movements) {
@@ -76,7 +110,8 @@ export function PointsProvider({ children }: { children: ReactNode }) {
         balance -= m.points
       }
     }
-    return { balance, lifetime }
+    const lots = buildLots(movements).filter((l) => l.remaining > 0)
+    return { balance, lifetime, lots }
   }, [movements])
 
   const earn = (points: number, orderId: number) => {
@@ -90,23 +125,17 @@ export function PointsProvider({ children }: { children: ReactNode }) {
   const redeem = (points: number, orderId: number) => {
     if (points <= 0) return
     setMovements((prev) => [
-      {
-        id: `m-${orderId}-d`,
-        kind: "debito",
-        points,
-        at: new Date(),
-        orderId,
-        description: `Canje en pedido #${orderId}`,
-      },
+      { id: `m-${orderId}-d`, kind: "debito", points, at: new Date(), orderId, description: `Canje en pedido #${orderId}` },
       ...prev,
     ])
   }
 
   const tier = tierFor(lifetime)
   const progress = progressToNext(lifetime)
+  const nextExpiry = lots[0] ?? null
 
   return (
-    <PointsContext.Provider value={{ balance, lifetime, tier, progress, movements, earn, redeem }}>
+    <PointsContext.Provider value={{ balance, lifetime, tier, progress, movements, lots, nextExpiry, earn, redeem }}>
       {children}
     </PointsContext.Provider>
   )

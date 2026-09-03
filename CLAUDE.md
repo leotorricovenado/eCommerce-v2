@@ -275,6 +275,27 @@ Dos layouts en `src/components/chrome/`:
   `theme.css` — distinto del amarillo de promo. `ProductCard` muestra pill "N pts" en los canjeables y
   `ProductDetail` un bloque "Canjealo por N pts". Todas las constantes (tasa, valor de canje, niveles,
   categorías) están al tope de `venadoMoney.ts` para ajustarlas.
+- **Venado Money, ajustes posteriores (2026-09-02)**: (a) **vencimiento de puntos**: `EXPIRY_MONTHS = 12`
+  (constante, no confirmada con negocio); los abonos son lotes y los canjes los consumen FIFO
+  (`buildLots` en `state/points.tsx`), así el extracto muestra por abono "Vencen el …" o "Quedan N ·
+  vencen el …" o "Ya canjeados", y arriba "Próximo vencimiento: N pts el …" (en rojo si vence en
+  60 días, con link a canjear); el Home de puntos repite la línea. (b) **Promos de puntos por
+  producto/marca** (`EARN_RULES` en `venadoMoney.ts`, ej. Raptor ×2): los puntos se calculan POR
+  LÍNEA (`pointsForQuote`), multiplicando nivel × promo; badge "×2 puntos" en ProductCard, Detalle y
+  línea del carrito, y sección "Promos de puntos" en `/puntos`. (c) **Navegación "atrás"**
+  (`lib/useSmartBack.ts`): `FocusLayout` muestra "‹ Carrito / Entrega / Catálogo / Mis pedidos" con
+  destino explícito por ruta (checkout siempre al paso anterior, pedido a Mis pedidos, producto por
+  historial con fallback a catálogo); `TopBar` muestra "‹" al padre en sub-pantallas (`/puntos/*` →
+  Puntos, `/pedidos` → Perfil); `ScrollToTop` ya no scrollea en POP, así el navegador restaura la
+  posición al volver del detalle al catálogo.
+- **Home v3 (2026-09-03, pedido del usuario)**: se quitó TODO lo de "Ofertas de la semana" (slide del
+  hero, banner rojo y grilla de descuentos). En su lugar: slide de Venado Money en el hero (Raptor,
+  ×2) y la sección **"Productos recomendados"** debajo de la card de puntos y antes de Categorías —
+  grilla 2/3 columnas con `RECOMMENDED_IDS` (jugos/bebidas de fruta con foto: De la Granja naranja,
+  pomelo, durazno, manzana; Frussion naranja, mango). En el bento de categorías el tile de Salsas
+  ahora usa la foto del ketchup con tinte rojo (`tint` opcional en `CategoryShowcase`) para no
+  repetir el verde del tile de Bebidas. Los descuentos siguen existiendo como efecto de reglas de
+  precio (cards, carrito, filtro "solo ofertas" del catálogo) — solo salieron del Home.
 - ⏳ Pendiente del mapa completo: Deudas, WhatsApp entry (chat simulado), Login (pospuestos).
 
 ## Notas de entorno / herramientas (no del código)

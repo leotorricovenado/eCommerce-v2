@@ -10,6 +10,8 @@ interface FeaturedCategory {
   category: Category
   image: string
   tagline: string
+  /** Tinte del tile (override de `tintForCategory`, para que dos tiles vecinos no repitan color). */
+  tint?: string
 }
 
 interface CategoryShowcaseProps {
@@ -26,7 +28,7 @@ export function CategoryShowcase({ featured, rest }: CategoryShowcaseProps) {
   return (
     <div className="flex flex-col gap-3">
       <div className="grid grid-cols-2 gap-3">
-        {featured.map(({ category, image, tagline }) => {
+        {featured.map(({ category, image, tagline, tint }) => {
           const Icon = categoryIcons[category.id]
           return (
             <Link
@@ -34,7 +36,7 @@ export function CategoryShowcase({ featured, rest }: CategoryShowcaseProps) {
               to={`/catalogo?categoria=${category.id}`}
               className={cn(
                 "group relative flex h-36 flex-col justify-between overflow-hidden rounded-3xl p-4 ring-1 ring-foreground/5 transition-all hover:-translate-y-0.5 hover:shadow-lg sm:h-44",
-                tintForCategory(category.id)
+                tint ?? tintForCategory(category.id)
               )}
             >
               <span className="pointer-events-none absolute -right-6 -bottom-10 size-32 rounded-full bg-card/50 sm:size-40" />

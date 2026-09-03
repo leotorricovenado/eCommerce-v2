@@ -6,7 +6,7 @@ import { categoryIcons } from "@/data/categoryIcons"
 import { mockDiscountPercent, mockPrice } from "@/data/mockPricing"
 import { productImage } from "@/data/productImages"
 import type { Product } from "@/data/products"
-import { redeemableFor } from "@/data/venadoMoney"
+import { earnRuleFor, redeemableFor } from "@/data/venadoMoney"
 import { formatBs, packagingShort } from "@/lib/format"
 import { tintForCategory } from "@/lib/categoryTint"
 import { cn } from "@/lib/utils"
@@ -30,6 +30,7 @@ export function ProductCard({ product, className }: ProductCardProps) {
   const originalPrice = discount > 0 ? price / (1 - discount / 100) : null
   const pack = packagingShort(product.packaging)
   const redeemable = redeemableFor(product.id)
+  const earnRule = earnRuleFor(product)
 
   return (
     <article
@@ -69,6 +70,12 @@ export function ProductCard({ product, className }: ProductCardProps) {
         {discount > 0 && (
           <span className="absolute top-2 left-2 rounded-full bg-accent px-2 py-0.5 text-[11px] font-bold text-accent-foreground shadow-sm">
             -{discount}%
+          </span>
+        )}
+        {earnRule && (
+          <span className="absolute bottom-2 left-2 inline-flex items-center gap-0.5 rounded-full bg-money-foreground px-1.5 py-0.5 text-[10px] font-bold text-card shadow-sm">
+            <Coins className="size-2.5" strokeWidth={2.5} />
+            {earnRule.label}
           </span>
         )}
         {redeemable && (

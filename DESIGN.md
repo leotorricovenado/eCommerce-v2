@@ -111,6 +111,15 @@ confirmación**, **ámbar = puntos Venado Money**. No mezclar (un CTA azul y otr
 Ancho: `max-w-3xl mx-auto`, padding lateral `px-4`; en `sm+` pasar a 2 columnas donde tenga sentido
 (galería/info, resumen/formulario). Grillas de productos: `grid-cols-2 sm:grid-cols-3`.
 
+## 3b. Navegación "atrás"
+- Toda pantalla que no es un tab del bottom nav tiene un botón volver arriba a la izquierda con el
+  **nombre del destino** ("‹ Carrito"), nunca una flecha muda.
+- El destino es **explícito por ruta** (`FocusLayout.backTargetFor`, `TopBar.parentFor`), no
+  `history.back()` a ciegas: en checkout vuelve al paso anterior, en pedido a "Mis pedidos", en
+  sub-pantallas de un tab al tab. Solo el detalle de producto usa historial (`useSmartBack`) con
+  fallback al catálogo, para no perder el scroll del catálogo.
+- Al volver (POP) no se resetea el scroll; al entrar (PUSH) sí.
+
 ## 4. Micro-interacciones (mínimo esperado)
 - Tap: `active:scale-95` (chips, botones chicos) o `active:scale-[0.98]` (CTA ancho).
 - Agregar al carrito: el "+" rojo se convierte en stepper azul `[− | N unidades | +]`; en 1 el "−"

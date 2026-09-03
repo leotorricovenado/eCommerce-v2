@@ -7,7 +7,7 @@ import { OrderLines } from "@/components/checkout/OrderLines"
 import { formatPts } from "@/components/money/PointsUI"
 import { QRCodeMock } from "@/components/QRCodeMock"
 import { deliveryPoints } from "@/data/customer"
-import { pointsForNet } from "@/data/venadoMoney"
+import { pointsForQuote } from "@/data/venadoMoney"
 import { notifyOrderConfirmed } from "@/lib/botApi"
 import { formatBs } from "@/lib/format"
 import { formatShortDate } from "@/lib/dates"
@@ -46,7 +46,7 @@ export function PaymentQR() {
   const empty = quote.lines.length === 0 && quote.redeems.length === 0
   // Pedido 100 % con puntos: no hay nada que cobrar, se confirma directo (sin QR ni banco).
   const onlyPoints = !empty && quote.net === 0 && quote.pointsCost > 0
-  const pointsEarned = pointsForNet(quote.net, tier)
+  const pointsEarned = pointsForQuote(quote, tier)
 
   useEffect(() => {
     if (empty && phase === "waiting") navigate("/carrito", { replace: true })
@@ -72,7 +72,7 @@ export function PaymentQR() {
         quote: q,
         deliveryPointId,
         deliveryDate,
-        pointsEarned: pointsForNet(q.net, tier),
+        pointsEarned: pointsForQuote(q, tier),
         pointsUsed: q.pointsCost,
       })
       // Venado Money: se acreditan los puntos ganados y se debitan los canjeados al confirmar.

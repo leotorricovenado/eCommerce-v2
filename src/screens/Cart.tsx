@@ -5,7 +5,7 @@ import { CheckoutSteps } from "@/components/checkout/CheckoutSteps"
 import { ProductThumb } from "@/components/checkout/OrderLines"
 import { QuoteSummary } from "@/components/checkout/QuoteSummary"
 import { formatPts } from "@/components/money/PointsUI"
-import { pointsForNet } from "@/data/venadoMoney"
+import { earnRuleFor, pointsForQuote } from "@/data/venadoMoney"
 import { usePoints } from "@/state/points"
 import type { QuoteLine, RedeemLine } from "@/data/priceRules"
 import { formatBs, parsePackaging } from "@/lib/format"
@@ -16,7 +16,7 @@ export function Cart() {
   const navigate = useNavigate()
   const { quote, add, setQuantity, setUnit, remove, setRedeemQuantity, removeRedeem } = useCart()
   const { balance, tier } = usePoints()
-  const pointsEarned = pointsForNet(quote.net, tier)
+  const pointsEarned = pointsForQuote(quote, tier)
   const pointsMissing = Math.max(0, quote.pointsCost - balance)
   const canContinue = pointsMissing === 0
 
@@ -210,6 +210,12 @@ function CartLineCard({ line, onQuantity, onUnit, onRemove }: CartLineCardProps)
             <span className="text-[11px] text-muted-foreground">
               {product.size} · {formatBs(line.itemPrice)} c/{unit === "caja" ? (pack?.container.toLowerCase() ?? "caja") : "u"}
             </span>
+            {earnRuleFor(product) && (
+              <span className="mt-0.5 inline-flex w-fit items-center gap-1 rounded-full bg-money/15 px-1.5 py-0.5 text-[10px] font-bold text-money-foreground">
+                <Coins className="size-2.5" strokeWidth={2.5} />
+                {earnRuleFor(product)!.label}
+              </span>
+            )}
           </div>
           <button
             type="button"

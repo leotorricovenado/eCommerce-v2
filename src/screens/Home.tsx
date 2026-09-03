@@ -1,5 +1,4 @@
 import { BadgePercent, QrCode, Truck } from "lucide-react"
-import { Link } from "react-router"
 
 import { BrandRail } from "@/components/home/BrandRail"
 import { CategoryShowcase } from "@/components/home/CategoryShowcase"
@@ -8,7 +7,6 @@ import { PointsCard } from "@/components/home/PointsCard"
 import { SectionHeader } from "@/components/home/SectionHeader"
 import { ProductCard } from "@/components/ProductCard"
 import { brands, categories, type Category } from "@/data/categories"
-import { mockDiscountPercent } from "@/data/mockPricing"
 import { hasProductImage, productImage } from "@/data/productImages"
 import { products, type Product } from "@/data/products"
 
@@ -27,24 +25,24 @@ const heroSlides: HeroSlide[] = [
     tone: "primary",
   },
   {
-    id: "ofertas",
-    eyebrow: "Ofertas de la semana",
-    title: "Hasta 20% OFF en KRIS",
-    subtitle: "Precios mayoristas para reponer tu stock sin salir del local.",
-    cta: "Ver ofertas",
-    to: "/catalogo?ofertas=1",
-    image: photoOf("ketchup-doypack-301049"),
-    tone: "accent",
+    id: "venado-money",
+    eyebrow: "Venado Money",
+    title: "Cada pedido suma puntos",
+    subtitle: "Canjealos por productos. Esta semana Raptor suma ×2.",
+    cta: "Ver mis puntos",
+    to: "/puntos",
+    image: photoOf("raptor-analcoholico-600217"),
+    tone: "warning",
   },
   {
     id: "bebidas",
     eyebrow: "Listas para vender",
     title: "Bebidas que rotan solas",
-    subtitle: "Frussion, Speranza, Raptor y más, en paquetes para tu heladera.",
+    subtitle: "Frussion, De la Granja, Speranza y más, en paquetes para tu heladera.",
     cta: "Ver bebidas",
     to: "/catalogo?categoria=bebidas-rtd",
     image: photoOf("refresco-frussion-naranja-600113"),
-    tone: "warning",
+    tone: "accent",
   },
 ]
 
@@ -60,7 +58,7 @@ const tagline = (c: Category) =>
   `${c.productCount} productos · ${c.brands.length > 2 ? `${c.brands.length} marcas` : c.brands.join(", ")}`
 
 const featuredCategories = [
-  { category: byId("salsas"), image: photoOf("mostaza-doypack-301053"), tagline: tagline(byId("salsas")) },
+  { category: byId("salsas"), image: photoOf("ketchup-doypack-301049"), tagline: tagline(byId("salsas")), tint: "bg-accent/10 text-accent" },
   { category: byId("bebidas-rtd"), image: photoOf("refresco-frussion-naranja-600113"), tagline: tagline(byId("bebidas-rtd")) },
 ]
 const restCategories = categories.filter(
@@ -88,8 +86,17 @@ function spreadByCategory(pool: Product[], limit: number): Product[] {
 // legítima para esta sección es el flag real `isPareto` de sale.products — ver CLAUDE.md.)
 const mostOrdered = spreadByCategory(products.filter(hasProductImage), 10)
 
-// Ofertas: productos con descuento simulado, repartidos por categoría.
-const deals = spreadByCategory(products.filter((p) => mockDiscountPercent(p) > 0), 6)
+// Recomendados del Home (pedido del usuario 2026-09-03): jugos y bebidas de fruta con foto real.
+// En real esta sección la alimentaría Sales (ej. `isPareto` / recomendaciones por cliente).
+const RECOMMENDED_IDS = [
+  "bebida-de-la-granja-naranja-600206",
+  "bebida-de-la-granja-pomelo-600219",
+  "refresco-frussion-naranja-600113",
+  "nectar-de-la-granja-durazno-600198",
+  "refresco-frussion-mango-600160",
+  "nectar-de-la-granja-manzana-600196",
+]
+const recommended = RECOMMENDED_IDS.map(productById)
 
 export function Home() {
   return (
@@ -117,6 +124,19 @@ export function Home() {
 
       <section>
         <SectionHeader
+          title="Productos recomendados"
+          subtitle="Jugos y bebidas de fruta para tu heladera"
+          to="/catalogo?categoria=bebidas-rtd"
+        />
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+          {recommended.map((p) => (
+            <ProductCard key={p.id} product={p} />
+          ))}
+        </div>
+      </section>
+
+      <section>
+        <SectionHeader
           title="Categorías"
           subtitle="375 productos de 9 categorías"
           to="/catalogo"
@@ -141,42 +161,6 @@ export function Home() {
       <section>
         <SectionHeader title="Nuestras marcas" subtitle="Industria boliviana" />
         <BrandRail brands={brands} />
-      </section>
-
-      <section>
-        <Link
-          to="/catalogo?ofertas=1"
-          className="group relative flex h-32 items-center overflow-hidden rounded-3xl bg-gradient-to-r from-accent to-accent/80 p-5 text-accent-foreground shadow-lg shadow-accent/20 transition-all hover:-translate-y-0.5"
-        >
-          <span className="pointer-events-none absolute -top-10 right-20 size-40 rounded-full bg-accent-foreground/10" />
-          <div className="relative z-10 flex max-w-[60%] flex-col gap-1">
-            <span className="text-[10px] font-bold tracking-widest uppercase opacity-80">
-              Solo esta semana
-            </span>
-            <span className="cn-font-heading text-xl leading-tight">
-              Ofertas para reponer tu stock
-            </span>
-            <span className="text-xs opacity-85">Hasta 20% en productos seleccionados</span>
-          </div>
-          <img
-            src={photoOf("salsa-golf-pomo-300179")}
-            alt=""
-            className="pointer-events-none absolute right-3 -bottom-2 h-[108%] w-[36%] -rotate-12 object-contain drop-shadow-2xl transition-transform group-hover:scale-105"
-          />
-        </Link>
-      </section>
-
-      <section>
-        <SectionHeader
-          title="Ofertas de la semana"
-          subtitle="Descuentos sobre precio mayorista"
-          to="/catalogo?ofertas=1"
-        />
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-          {deals.map((p) => (
-            <ProductCard key={p.id} product={p} />
-          ))}
-        </div>
       </section>
 
     </div>

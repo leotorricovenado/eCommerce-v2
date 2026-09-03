@@ -1,17 +1,18 @@
-import { ArrowDownLeft, ArrowUpRight, ChevronRight, Coins, Gift, Medal, ReceiptText, ShoppingBag, Sparkles, Truck } from "lucide-react"
+import { ArrowDownLeft, ArrowUpRight, CalendarClock, ChevronRight, Coins, Gift, Medal, ReceiptText, ShoppingBag, Sparkles, Truck, Zap } from "lucide-react"
 import { Link } from "react-router"
 
 import { SectionHeader } from "@/components/home/SectionHeader"
 import { PointsPill, ProgressRing, TierBadge, formatPts } from "@/components/money/PointsUI"
 import { RedeemProductCard } from "@/components/money/RedeemProductCard"
-import { POINTS_PER_BS, REDEEM_BS_PER_POINT, redeemables } from "@/data/venadoMoney"
+import { EXPIRY_MONTHS, POINTS_PER_BS, REDEEM_BS_PER_POINT, promoProducts, redeemables } from "@/data/venadoMoney"
+import { ProductThumb } from "@/components/checkout/OrderLines"
 import { formatBs } from "@/lib/format"
 import { formatShortDate } from "@/lib/dates"
 import { cn } from "@/lib/utils"
 import { usePoints } from "@/state/points"
 
 export function PointsHome() {
-  const { balance, tier, progress, movements } = usePoints()
+  const { balance, tier, progress, movements, nextExpiry } = usePoints()
   const affordableFirst = [...redeemables].sort((a, b) => Number(b.points <= balance) - Number(a.points <= balance)).slice(0, 8)
 
   return (
@@ -51,6 +52,16 @@ export function PointsHome() {
         )}
       </div>
 
+      {nextExpiry && (
+        <div className="-mt-3 flex items-center gap-2 rounded-2xl bg-card px-3 py-2 text-[11px] ring-1 ring-foreground/5">
+          <CalendarClock className="size-3.5 shrink-0 text-money-foreground" />
+          <span className="min-w-0 flex-1 truncate text-muted-foreground">
+            Próximo vencimiento: <strong className="text-foreground">{formatPts(nextExpiry.remaining)}</strong> el{" "}
+            {nextExpiry.expiresAt.toLocaleDateString("es-BO", { day: "numeric", month: "short", year: "numeric" }).replace(/\./g, "")} · vencen a los {EXPIRY_MONTHS} meses
+          </span>
+        </div>
+      )}
+
       {/* Accesos */}
       <div className="grid grid-cols-3 gap-2">
         {[
@@ -81,6 +92,33 @@ export function PointsHome() {
           ))}
         </div>
       </section>
+
+      {/* Promos de puntos */}
+      {promoProducts.length > 0 && (
+        <section>
+          <SectionHeader title="Promos de puntos" subtitle="Productos que suman más" to={`/catalogo?marca=${encodeURIComponent(promoProducts[0]!.product.brand ?? "")}`} linkLabel="Ver todo" />
+          <div className="flex flex-col gap-2">
+            {promoProducts.slice(0, 3).map(({ product, rule }) => (
+              <Link
+                key={product.id}
+                to={`/producto/${product.id}`}
+                className="flex items-center gap-3 rounded-3xl bg-money-foreground p-3 text-card shadow-lg transition-all hover:-translate-y-0.5"
+              >
+                <ProductThumb product={product} className="size-14 bg-card" />
+                <div className="flex min-w-0 flex-1 flex-col">
+                  <span className="flex items-center gap-1 text-[10px] font-bold tracking-widest text-money uppercase">
+                    <Zap className="size-3" strokeWidth={2.5} />
+                    {rule.label}
+                  </span>
+                  <span className="truncate text-sm font-semibold">{product.name}</span>
+                  <span className="truncate text-[11px] opacity-75">{rule.description}</span>
+                </div>
+                <ChevronRight className="size-4 shrink-0 opacity-70" />
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* Movimientos */}
       <section>

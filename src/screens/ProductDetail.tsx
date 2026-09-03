@@ -22,7 +22,7 @@ import { brandLogos } from "@/data/brandLogos"
 import { categories } from "@/data/categories"
 import { categoryIcons } from "@/data/categoryIcons"
 import { mockDiscountPercent, mockPrice } from "@/data/mockPricing"
-import { redeemableFor } from "@/data/venadoMoney"
+import { earnRuleFor, redeemableFor } from "@/data/venadoMoney"
 import { formatPts } from "@/components/money/PointsUI"
 import { usePoints } from "@/state/points"
 import { hasProductImage, productImage } from "@/data/productImages"
@@ -253,6 +253,15 @@ function ProductDetailView({ productId }: { productId: string | undefined }) {
                   {pack.container} cerrada = {pack.breakdown} = {pack.units} unidades.
                 </p>
               )}
+            </div>
+          )}
+
+          {earnRuleFor(product) && (
+            <div className="flex items-center gap-2 rounded-2xl bg-money-foreground px-3 py-2 text-xs font-semibold text-card">
+              <Coins className="size-4 shrink-0 text-money" strokeWidth={2.5} />
+              <span>
+                <strong>{earnRuleFor(product)!.label}</strong> Venado Money · {earnRuleFor(product)!.description}
+              </span>
             </div>
           )}
 

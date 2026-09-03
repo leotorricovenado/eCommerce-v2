@@ -1,7 +1,7 @@
 import { Check, Coins, Sparkles } from "lucide-react"
 
 import { TIER_ICON, TIER_TONE, formatPts } from "@/components/money/PointsUI"
-import { POINTS_PER_BS, TIERS } from "@/data/venadoMoney"
+import { TIERS } from "@/data/venadoMoney"
 import { cn } from "@/lib/utils"
 import { usePoints } from "@/state/points"
 
@@ -99,7 +99,7 @@ export function Tiers() {
               <Check className="mt-0.5 size-4 shrink-0 text-success" strokeWidth={3} />
               <span>
                 <strong>{t.label}:</strong> {t.benefit}
-                {t.multiplier !== 1 && ` (${(POINTS_PER_BS * t.multiplier * 100).toFixed(0)} pts por cada Bs 100)`}.
+                {t.multiplier !== 1 && ` (×${t.multiplier} sobre los puntos de cada estrategia)`}.
               </span>
             </li>
           ))}

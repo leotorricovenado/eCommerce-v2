@@ -14,4 +14,5 @@ export const brandFamily: Record<string, string> = {
   Real: "/family-products/real.webp",
   Shabay: "/family-products/shabay.webp",
   Speranza: "/family-products/speranza.webp",
-}
+  Raptor: "/family-products/raptor.webp",
+};

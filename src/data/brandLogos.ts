@@ -16,7 +16,9 @@ export const brandLogos: Record<string, string> = {
   Real: "/marcas/real.svg",
   Shabay: "/marcas/shabay.svg",
   Speranza: "/marcas/speranza.svg",
-}
+  Raptor: "/marcas/raptor.jpg",
+  "De la Granja": "/marcas/delagranja.jpg",
+};
 
 /** Logo blanco de Grupo Venado (para fondos de marca, ej. TopBar). */
-export const groupLogoWhite = "/marcas/grupo-venado-blanco.svg"
+export const groupLogoWhite = "/marcas/grupo-venado-blanco.svg";
