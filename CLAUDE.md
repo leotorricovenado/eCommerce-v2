@@ -289,13 +289,48 @@ Dos layouts en `src/components/chrome/`:
   Puntos, `/pedidos` → Perfil); `ScrollToTop` ya no scrollea en POP, así el navegador restaura la
   posición al volver del detalle al catálogo.
 - **Home v3 (2026-09-03, pedido del usuario)**: se quitó TODO lo de "Ofertas de la semana" (slide del
-  hero, banner rojo y grilla de descuentos). En su lugar: slide de Venado Money en el hero (Raptor,
-  ×2) y la sección **"Productos recomendados"** debajo de la card de puntos y antes de Categorías —
+  hero, banner rojo y grilla de descuentos). En su lugar: slide de Venado Money en el hero y la sección **"Productos recomendados"** debajo de la card de puntos y antes de Categorías —
   grilla 2/3 columnas con `RECOMMENDED_IDS` (jugos/bebidas de fruta con foto: De la Granja naranja,
   pomelo, durazno, manzana; Frussion naranja, mango). En el bento de categorías el tile de Salsas
   ahora usa la foto del ketchup con tinte rojo (`tint` opcional en `CategoryShowcase`) para no
   repetir el verde del tile de Bebidas. Los descuentos siguen existiendo como efecto de reglas de
   precio (cards, carrito, filtro "solo ofertas" del catálogo) — solo salieron del Home.
+- ✅ **Venado Money v2 — los puntos los generan ESTRATEGIAS, no el monto (2026-09-03, decisión de
+  negocio tras la presentación)**. Se eliminó por completo `POINTS_PER_BS` / "1 pt por Bs 10" y el
+  antiguo `EARN_RULES` (Raptor ×2). Modelo nuevo en `src/data/venadoMoney.ts`: `EARN_STRATEGIES[]`,
+  cada una con un `scope` discriminado — `product` (ids), `brand`, `subcategory` (familia/subfamilia)
+  o `category` — y la regla **"cada `every` unidades compradas → `points` puntos"**. Sirve al caso de
+  negocio real: empujar que un cliente que compra A empiece a comprar B (la estrategia premia B). En
+  producción las estrategias las configura **otro microservicio de DEAL** y al eCommerce le llegan ya
+  resueltas; acá `earnBreakdown(quote, tier)` las simula y devuelve `{lines, hints, base, total}`.
+  El multiplicador del nivel (Bronce ×1 / Plata ×1.2 / Oro ×1.5) se aplica **sobre** los puntos de las
+  estrategias. 5 estrategias demo: Mayonesa Doypack c/12 → 50 pts (producto), Ketchup Doypack c/6 →
+  20 pts (2 productos), marca Raptor c/6 → 30 pts, subcategoría Detergentes c/12 → 30 pts, categoría
+  Bebidas RTD c/6 → 10 pts. **UI**: pantalla nueva `/puntos/como-sumar`
+  (`screens/money/EarnStrategies.tsx`, card por estrategia con ícono según scope, producto de muestra
+  y "Sumás +N pts" con el multiplicador ya aplicado), sección "Productos que suman puntos" en
+  `/puntos` (`components/money/EarnStrategyList.tsx`), badge "+N pts c/X" en `ProductCard` y en la
+  línea del carrito, bloque "Sumá N puntos cada X unidades" en el Detalle. `scopeLabel`/`scopeLink`/
+  `scopeSampleProduct` traducen el scope a texto, link de catálogo y foto.
+- **Avisos del carrito unificados** (`components/checkout/CartNudges.tsx`): antes había dos bloques
+  apilados de "te faltan N" (bonificación y puntos) que empujaban los productos fuera de pantalla y
+  repetían el mismo producto. Ahora se **fusionan por producto + cantidad faltante** ("te llevás 1
+  Mayonesa gratis + 50 puntos Venado Money") y, si queda más de uno, van en un **rail horizontal**
+  con snap. Color: ámbar cálido si hay bonificación, ámbar money si es solo puntos.
+- ✅ **Sin descuentos y puntos desacoplados de Bs (2026-09-03, decisión de negocio)**. El usuario:
+  *"quitar todo referente a -10% o 20%, eso no existirá... el filtro de descuento no existirá, eso de
+  descuento en el eCommerce"*. Se eliminó `mockDiscountPercent` y **todo rastro de descuento**: badges
+  `-N %` y precio tachado en `ProductCard` y `ProductDetail`, "Ahorrás N %", el filtro "solo ofertas"
+  del catálogo (con su param `?ofertas=1` y su chip activo), la fila "Descuentos" del `QuoteSummary` y
+  los tachados de línea en Carrito/`OrderLines`. En `priceRules.ts` se sacó `discountRate` (la regla
+  PR-LISTA-CLIENTE 10 % desapareció; el combo Bristar quedó solo como bonificación) y del `Quote`
+  salió el campo `discount` — el efecto visible de las reglas ahora es **solo la bonificación**.
+  En Venado Money se quitó la línea "≈ Bs N en productos" del hero de `/puntos` para **no asociar los
+  puntos a dinero** (la constante `REDEEM_BS_PER_POINT` sigue existiendo, pero solo para derivar el
+  costo en puntos de los canjeables — no se muestra). Los niveles y su multiplicador (Plata 20 % /
+  Oro 50 % más de puntos) **se mantienen**: el usuario acotó el pedido a los descuentos. El hero
+  carrusel del Home bajó de `h-56/sm:h-64` a `h-44/sm:h-52` (título y padding ajustados) porque el
+  banner tapaba demasiado el contenido.
 - ⏳ Pendiente del mapa completo: Deudas, WhatsApp entry (chat simulado), Login (pospuestos).
 
 ## Notas de entorno / herramientas (no del código)

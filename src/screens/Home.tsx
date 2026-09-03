@@ -28,7 +28,7 @@ const heroSlides: HeroSlide[] = [
     id: "venado-money",
     eyebrow: "Venado Money",
     title: "Cada pedido suma puntos",
-    subtitle: "Canjealos por productos. Esta semana Raptor suma ×2.",
+    subtitle: "Comprá los productos de la lista y canjeá tus puntos.",
     cta: "Ver mis puntos",
     to: "/puntos",
     image: photoOf("raptor-analcoholico-600217"),

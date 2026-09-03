@@ -50,9 +50,6 @@ export function OrderLines({ quote }: { quote: Quote }) {
             </span>
           </div>
           <div className="flex flex-col items-end leading-none">
-            {l.discount > 0 && (
-              <span className="text-[11px] text-muted-foreground line-through">{formatBs(l.gross)}</span>
-            )}
             <span className="text-[13px] font-bold tabular-nums">{formatBs(l.net)}</span>
           </div>
         </li>

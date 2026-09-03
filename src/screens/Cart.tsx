@@ -1,11 +1,12 @@
-import { AlertTriangle, ArrowRight, Coins, Gift, Minus, Plus, ShoppingCart, Sparkles, Trash2 } from "lucide-react"
+import { AlertTriangle, ArrowRight, Coins, Gift, Minus, Plus, ShoppingCart, Trash2 } from "lucide-react"
 import { Link, useNavigate } from "react-router"
 
+import { CartNudges } from "@/components/checkout/CartNudges"
 import { CheckoutSteps } from "@/components/checkout/CheckoutSteps"
 import { ProductThumb } from "@/components/checkout/OrderLines"
 import { QuoteSummary } from "@/components/checkout/QuoteSummary"
 import { formatPts } from "@/components/money/PointsUI"
-import { earnRuleFor, pointsForQuote } from "@/data/venadoMoney"
+import { earnBreakdown, strategiesFor } from "@/data/venadoMoney"
 import { usePoints } from "@/state/points"
 import type { QuoteLine, RedeemLine } from "@/data/priceRules"
 import { formatBs, parsePackaging } from "@/lib/format"
@@ -16,7 +17,8 @@ export function Cart() {
   const navigate = useNavigate()
   const { quote, add, setQuantity, setUnit, remove, setRedeemQuantity, removeRedeem } = useCart()
   const { balance, tier } = usePoints()
-  const pointsEarned = pointsForQuote(quote, tier)
+  const earn = earnBreakdown(quote, tier)
+  const pointsEarned = earn.total
   const pointsMissing = Math.max(0, quote.pointsCost - balance)
   const canContinue = pointsMissing === 0
 
@@ -56,32 +58,12 @@ export function Cart() {
         </div>
       </div>
 
-      {/* Nudges de bonificación */}
-      {quote.hints.map((h) => (
-        <div
-          key={`${h.product.id}-${h.ruleId}`}
-          className="flex items-center gap-3 rounded-2xl bg-gradient-to-r from-warning/25 to-warning/10 p-3 ring-1 ring-warning/40"
-        >
-          <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-card text-warning shadow-sm">
-            <Sparkles className="size-4" strokeWidth={2.25} />
-          </span>
-          <div className="flex min-w-0 flex-1 flex-col">
-            <span className="text-[13px] leading-snug font-semibold">
-              Te faltan {h.missingUnits} {h.missingUnits === 1 ? "unidad" : "unidades"} de{" "}
-              {h.product.name}
-            </span>
-            <span className="text-[11px] text-muted-foreground">y te llevás {h.reward}</span>
-          </div>
-          <button
-            type="button"
-            onClick={() => add(h.product.id, h.missingUnits, "unidad")}
-            className="flex h-9 shrink-0 cursor-pointer items-center gap-1 rounded-full bg-foreground px-3 text-xs font-bold text-background shadow-md active:scale-95"
-          >
-            <Plus className="size-3.5" strokeWidth={3} />
-            {h.missingUnits}
-          </button>
-        </div>
-      ))}
+      {/* Oportunidades: bonificaciones + puntos, consolidadas */}
+      <CartNudges
+        bonusHints={quote.hints}
+        earnHints={earn.hints}
+        onAdd={(productId, units) => add(productId, units, "unidad")}
+      />
 
       {/* Líneas */}
       <div className="flex flex-col gap-3">
@@ -210,10 +192,10 @@ function CartLineCard({ line, onQuantity, onUnit, onRemove }: CartLineCardProps)
             <span className="text-[11px] text-muted-foreground">
               {product.size} · {formatBs(line.itemPrice)} c/{unit === "caja" ? (pack?.container.toLowerCase() ?? "caja") : "u"}
             </span>
-            {earnRuleFor(product) && (
+            {strategiesFor(product)[0] && (
               <span className="mt-0.5 inline-flex w-fit items-center gap-1 rounded-full bg-money/15 px-1.5 py-0.5 text-[10px] font-bold text-money-foreground">
                 <Coins className="size-2.5" strokeWidth={2.5} />
-                {earnRuleFor(product)!.label}
+                +{strategiesFor(product)[0]!.points} pts cada {strategiesFor(product)[0]!.every}
               </span>
             )}
           </div>
@@ -263,9 +245,6 @@ function CartLineCard({ line, onQuantity, onUnit, onRemove }: CartLineCardProps)
             </button>
           </div>
           <div className="flex flex-col items-end leading-none">
-            {line.discount > 0 && (
-              <span className="text-[11px] text-muted-foreground line-through">{formatBs(line.gross)}</span>
-            )}
             <span className="cn-font-heading text-[15px] tabular-nums">{formatBs(line.net)}</span>
           </div>
         </div>

@@ -43,7 +43,7 @@ interface CartContextValue {
   getLine: (productId: string, unit?: CartUnit) => CartLine | undefined
   /** Cantidad de bultos/unidades cargados (lo que muestra el badge del carrito). */
   itemCount: number
-  /** Cotización con descuentos y bonificaciones (motor mock, ver data/priceRules.ts). */
+  /** Cotización con bonificaciones y canjes (motor mock, ver data/priceRules.ts). */
   quote: Quote
 }
 

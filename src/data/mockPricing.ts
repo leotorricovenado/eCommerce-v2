@@ -33,10 +33,3 @@ export function mockPrice(product: Product): number {
   const raw = min + t * (max - min)
   return Math.round(raw * 2) / 2
 }
-
-export function mockDiscountPercent(product: Product): number {
-  const h = hashString(`discount-${product.id}`) % 100
-  if (h < 78) return 0
-  if (h < 93) return 10
-  return 20
-}

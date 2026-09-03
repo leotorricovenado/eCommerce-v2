@@ -21,8 +21,8 @@ import { ProductCard } from "@/components/ProductCard"
 import { brandLogos } from "@/data/brandLogos"
 import { categories } from "@/data/categories"
 import { categoryIcons } from "@/data/categoryIcons"
-import { mockDiscountPercent, mockPrice } from "@/data/mockPricing"
-import { earnRuleFor, redeemableFor } from "@/data/venadoMoney"
+import { mockPrice } from "@/data/mockPricing"
+import { redeemableFor, strategiesFor } from "@/data/venadoMoney"
 import { formatPts } from "@/components/money/PointsUI"
 import { usePoints } from "@/state/points"
 import { hasProductImage, productImage } from "@/data/productImages"
@@ -81,8 +81,6 @@ function ProductDetailView({ productId }: { productId: string | undefined }) {
   const tint = tintForCategory(product.categoryId)
 
   const basePrice = mockPrice(product)
-  const discount = mockDiscountPercent(product)
-  const originalUnitPrice = discount > 0 ? basePrice / (1 - discount / 100) : null
   const pack = parsePackaging(product.packaging)
   const hasBulk = (pack?.units ?? 1) > 1
   const selectedPrice = unitPrice(product, unit)
@@ -150,11 +148,6 @@ function ProductDetailView({ productId }: { productId: string | undefined }) {
                 <span className="text-xs font-medium opacity-70">Foto en camino</span>
               </div>
             )}
-            {discount > 0 && (
-              <span className="absolute top-4 left-4 rounded-full bg-accent px-3 py-1 text-sm font-bold text-accent-foreground shadow-md">
-                -{discount}%
-              </span>
-            )}
             {logo && photo && (
               <span className="absolute top-4 right-4 flex size-12 items-center justify-center rounded-full bg-card p-1 shadow-md">
                 <img src={logo} alt={product.brand ?? ""} className="size-full rounded-full object-contain" />
@@ -201,11 +194,6 @@ function ProductDetailView({ productId }: { productId: string | undefined }) {
           {/* Precio */}
           <div className="flex items-end gap-3">
             <div className="flex flex-col leading-none">
-              {originalUnitPrice && unit === "unidad" && (
-                <span className="text-sm text-muted-foreground line-through">
-                  {formatBs(originalUnitPrice)}
-                </span>
-              )}
               <span className="cn-font-heading text-3xl">{formatBs(selectedPrice)}</span>
               <span className="mt-1 text-xs text-muted-foreground">
                 {unit === "caja"
@@ -213,11 +201,6 @@ function ProductDetailView({ productId }: { productId: string | undefined }) {
                   : "por unidad · precio mayorista"}
               </span>
             </div>
-            {discount > 0 && (
-              <span className="mb-1 rounded-full bg-accent/10 px-2 py-0.5 text-xs font-bold text-accent">
-                Ahorrás {discount}%
-              </span>
-            )}
           </div>
 
           {/* Unidad de venta: mínima (unidad) / máxima (bulto cerrado) */}
@@ -256,14 +239,22 @@ function ProductDetailView({ productId }: { productId: string | undefined }) {
             </div>
           )}
 
-          {earnRuleFor(product) && (
-            <div className="flex items-center gap-2 rounded-2xl bg-money-foreground px-3 py-2 text-xs font-semibold text-card">
-              <Coins className="size-4 shrink-0 text-money" strokeWidth={2.5} />
-              <span>
-                <strong>{earnRuleFor(product)!.label}</strong> Venado Money · {earnRuleFor(product)!.description}
+          {strategiesFor(product).map((s) => (
+            <div
+              key={s.id}
+              className="flex items-center gap-2.5 rounded-2xl bg-money-foreground px-3 py-2.5 text-card"
+            >
+              <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-money text-money-foreground">
+                <Coins className="size-4" strokeWidth={2.5} />
+              </span>
+              <span className="flex min-w-0 flex-1 flex-col leading-tight">
+                <span className="text-[13px] font-semibold">
+                  Sumá <strong>{s.points} puntos</strong> cada {s.every} unidades
+                </span>
+                <span className="text-[11px] opacity-75">{s.name} · Venado Money</span>
               </span>
             </div>
-          )}
+          ))}
 
           {/* Canje con Venado Money */}
           {(() => {

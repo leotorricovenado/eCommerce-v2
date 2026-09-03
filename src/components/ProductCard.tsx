@@ -3,10 +3,10 @@ import { Link } from "react-router"
 
 import { brandLogos } from "@/data/brandLogos"
 import { categoryIcons } from "@/data/categoryIcons"
-import { mockDiscountPercent, mockPrice } from "@/data/mockPricing"
+import { mockPrice } from "@/data/mockPricing"
 import { productImage } from "@/data/productImages"
 import type { Product } from "@/data/products"
-import { earnRuleFor, redeemableFor } from "@/data/venadoMoney"
+import { redeemableFor, strategiesFor } from "@/data/venadoMoney"
 import { formatBs, packagingShort } from "@/lib/format"
 import { tintForCategory } from "@/lib/categoryTint"
 import { cn } from "@/lib/utils"
@@ -26,11 +26,9 @@ export function ProductCard({ product, className }: ProductCardProps) {
   const photo = productImage(product)
   const logo = product.brand ? brandLogos[product.brand] : undefined
   const price = mockPrice(product)
-  const discount = mockDiscountPercent(product)
-  const originalPrice = discount > 0 ? price / (1 - discount / 100) : null
   const pack = packagingShort(product.packaging)
   const redeemable = redeemableFor(product.id)
-  const earnRule = earnRuleFor(product)
+  const earnStrategy = strategiesFor(product)[0]
 
   return (
     <article
@@ -67,15 +65,10 @@ export function ProductCard({ product, className }: ProductCardProps) {
           </div>
         )}
 
-        {discount > 0 && (
-          <span className="absolute top-2 left-2 rounded-full bg-accent px-2 py-0.5 text-[11px] font-bold text-accent-foreground shadow-sm">
-            -{discount}%
-          </span>
-        )}
-        {earnRule && (
+        {earnStrategy && (
           <span className="absolute bottom-2 left-2 inline-flex items-center gap-0.5 rounded-full bg-money-foreground px-1.5 py-0.5 text-[10px] font-bold text-card shadow-sm">
             <Coins className="size-2.5" strokeWidth={2.5} />
-            {earnRule.label}
+            +{earnStrategy.points} pts c/{earnStrategy.every}
           </span>
         )}
         {redeemable && (
@@ -110,11 +103,6 @@ export function ProductCard({ product, className }: ProductCardProps) {
         <div className="mt-auto flex flex-col gap-2 pt-2">
           <div className="flex items-end justify-between gap-2">
             <div className="flex flex-col leading-none">
-              {originalPrice && (
-                <span className="text-[11px] text-muted-foreground line-through">
-                  {formatBs(originalPrice)}
-                </span>
-              )}
               <span className="cn-font-heading text-[15px]">{formatBs(price)}</span>
             </div>
             {quantity === 0 && (

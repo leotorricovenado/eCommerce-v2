@@ -21,8 +21,10 @@ admin ni en un wireframe.
    preguntar con `AskUserQuestion` ofreciendo 2-4 opciones con la **recomendada primera**. El usuario
    lo pidió textual: *"si tienes dudas de algo preguntame, no suponemos nada"*.
 2. **Datos reales o nada.** Solo se muestra lo que está en `src/data/products.ts` /
-   `categories.ts` (nombre, marca, tamaño, SKU, vida útil, presentación) + fotos reales. Precio y
-   descuento vienen de `mockPricing.ts` y están marcados como SIMULADOS. No inventar descripciones,
+   `categories.ts` (nombre, marca, tamaño, SKU, vida útil, presentación) + fotos reales. El precio
+   viene de `mockPricing.ts` y está marcado como SIMULADO. **No hay descuentos** en el eCommerce
+   (decisión de negocio 2026-09-03): ni badge de %, ni precio tachado, ni "ahorrás", ni filtro de
+   ofertas, ni fila "Descuentos" en el resumen. No inventar descripciones,
    stock, reseñas, ratings, "más vendido" (existe un flag real `isPareto` en Sales para eso, cuando
    haya integración), ni isotipos para marcas sin logo.
 3. **Foto real siempre que exista.** Priorizá productos con foto en rails, destacados, relacionados
@@ -38,7 +40,7 @@ admin ni en un wireframe.
 | Rol | Token | Uso |
 |---|---|---|
 | Marca / navegación / selección | `primary` (azul #0B54C9) | logo, links, chips activos, stepper en card, ring de selección |
-| **Conversión** | `accent` (rojo #E33231) | botón "+" de agregar, CTA "Agregar", badges de descuento, banner de ofertas |
+| **Conversión** | `accent` (rojo #E33231) | botón "+" de agregar, CTA "Agregar", CTA del hero |
 | Éxito | `success` (verde) | estado "Agregado", franja "En tu carrito" |
 | Promo cálida | `warning` (amarillo) | slide de hero con texto oscuro |
 | Fondo de página | `background` (gris muy claro) | el lienzo |
@@ -105,6 +107,8 @@ confirmación**, **ámbar = puntos Venado Money**. No mezclar (un CTA azul y otr
 | **Hero de saldo** (bloque ámbar con número enorme + anillo de progreso + badge de nivel) | `screens/money/PointsHome.tsx` | Saldos, metas, progreso a un rango |
 | **Anillo de progreso** (`ProgressRing`) y **pill de puntos** (`PointsPill`) | `components/money/PointsUI.tsx` | Cualquier % a una meta / cualquier cantidad de puntos |
 | **RedeemProductCard** (misma silueta que ProductCard pero en ámbar, "Canjear" / "Te faltan N pts") | `components/money/RedeemProductCard.tsx` | Catálogo de canje. No mezclar con la card en Bs |
+| **Rail de oportunidades** (avisos "te faltan N" fusionados, horizontal con snap si hay >1) | `components/checkout/CartNudges.tsx` | Nudges de conversión que no deben empujar el contenido principal |
+| **Card de estrategia de puntos** (ícono de scope + producto de muestra + barra "Sumás +N pts") | `screens/money/EarnStrategies.tsx` | Reglas de negocio que el cliente debe entender de un vistazo |
 | **Section header** (título + subtítulo + "Ver todo ›") | `components/home/SectionHeader.tsx` | Toda sección con más contenido detrás |
 | **Header de foco** (volver + carrito con badge) | `components/chrome/FocusLayout.tsx` | Detalle, checkout, pago, estado |
 

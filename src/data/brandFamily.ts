@@ -5,14 +5,14 @@
 // marcas que todavía no están en el catálogo (azucaraditas, choco-explosion, fleischmann,
 // frutaritos, kriskao) — se mapean cuando lleguen sus catálogos.
 export const brandFamily: Record<string, string> = {
-  Bristar: "/family-products/bristar.webp",
-  "Casa del Camba": "/family-products/casa-del-camba.webp",
-  "El Pescador": "/family-products/el-pescador.webp",
-  Frussion: "/family-products/frussion.webp",
-  KRIS: "/family-products/kris.webp",
-  Kriolla: "/family-products/kriolla.webp",
-  Real: "/family-products/real.webp",
-  Shabay: "/family-products/shabay.webp",
-  Speranza: "/family-products/speranza.webp",
+  Bristar: "/family-products/Bristar-family.webp",
+  "Casa del Camba": "/family-products/Casa-del-Camba.webp",
+  "El Pescador": "/family-products/El-Pescador.webp",
+  Frussion: "/family-products/Frussion.webp",
+  KRIS: "/family-products/Kris-family.webp",
+  Kriolla: "/family-products/Kriolla-Family.webp",
+  Real: "/family-products/Real.webp",
+  Shabay: "/family-products/family-Shabay.webp",
+  Speranza: "/family-products/Speranza.webp",
   Raptor: "/family-products/raptor.webp",
 };

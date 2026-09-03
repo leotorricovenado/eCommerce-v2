@@ -148,32 +148,36 @@ export function strategiesFor(product: Product): EarnStrategy[] {
 
 /** Etiqueta del alcance para la lista "Productos que suman puntos". */
 export function scopeLabel(s: EarnStrategy): string {
-  switch (s.scope.kind) {
+  const scope = s.scope
+  switch (scope.kind) {
     case "product":
-      return s.scope.productIds.length > 1 ? "Productos seleccionados" : "Producto"
+      return scope.productIds.length > 1 ? "Productos seleccionados" : "Producto"
     case "brand":
-      return `Marca ${s.scope.brand}`
+      return `Marca ${scope.brand}`
     case "subcategory": {
-      const cat = categories.find((c) => c.id === s.scope.categoryId)
-      const sub = cat?.subcategories.find((x) => x.id === (s.scope as { subcategoryId: string }).subcategoryId)
+      const cat = categories.find((c) => c.id === scope.categoryId)
+      const sub = cat?.subcategories.find((x) => x.id === scope.subcategoryId)
       return `${sub?.label ?? "Subcategoría"} · ${cat?.label ?? ""}`.trim()
     }
-    case "category":
-      return `Categoría ${categories.find((c) => c.id === s.scope.categoryId)?.label ?? ""}`.trim()
+    case "category": {
+      const cat = categories.find((c) => c.id === scope.categoryId)
+      return `Categoría ${cat?.label ?? ""}`.trim()
+    }
   }
 }
 
 /** A dónde lleva la estrategia en el catálogo. */
 export function scopeLink(s: EarnStrategy): string {
-  switch (s.scope.kind) {
+  const scope = s.scope
+  switch (scope.kind) {
     case "product":
-      return s.scope.productIds.length === 1 ? `/producto/${s.scope.productIds[0]}` : "/catalogo"
+      return scope.productIds.length === 1 ? `/producto/${scope.productIds[0]}` : "/catalogo"
     case "brand":
-      return `/catalogo?marca=${encodeURIComponent(s.scope.brand)}`
+      return `/catalogo?marca=${encodeURIComponent(scope.brand)}`
     case "subcategory":
-      return `/catalogo?categoria=${s.scope.categoryId}&sub=${s.scope.subcategoryId}`
+      return `/catalogo?categoria=${scope.categoryId}&sub=${scope.subcategoryId}`
     case "category":
-      return `/catalogo?categoria=${s.scope.categoryId}`
+      return `/catalogo?categoria=${scope.categoryId}`
   }
 }
 

@@ -6,7 +6,11 @@
 // complejo de Sales que a eVenado NO le interesa: al eCommerce solo le llegan sus EFECTOS. Una
 // regla puede dar descuento, bonificación, o ambos a la vez. Por eso acá:
 //   - las reglas son datos opacos con un `id` interno que nunca se muestra al cliente,
-//   - la UI solo muestra "Descuento" y "Bonificación" (nunca "Mayorista A" ni nombres de regla),
+//   - la UI solo muestra "Bonificación" (nunca "Mayorista A" ni nombres de regla),
+//   - **no hay descuentos**: decisión de negocio 2026-09-03 — el eCommerce no muestra descuentos
+//     (ni porcentaje, ni precio tachado, ni fila "Descuentos"). El precio que se ve es el precio
+//     del cliente y punto; el efecto visible de las reglas es la bonificación. Si algún día Sales
+//     manda `discountAmount`, hay que volver a preguntarle a negocio antes de mostrarlo.
 //   - la bonificación es una LÍNEA APARTE gratis (`is_bonus` en sale_order_details), aunque sea
 //     del mismo producto que se compra ("2 líneas por producto", nota del schema real).
 // Decisión del usuario 2026-09-02. Reemplazar `quoteCart` por la llamada real cuando exista O3.
@@ -27,8 +31,6 @@ interface Rule {
   id: string
   /** Productos a los que aplica; vacío = todos. */
   productIds: string[]
-  /** Descuento porcentual sobre la línea (0-1). */
-  discountRate?: number
   /** Cada `every` unidades sueltas regala `bonusQty` de `bonusProductId` (o del mismo producto). */
   every?: number
   bonusQty?: number
@@ -40,8 +42,6 @@ interface Rule {
 }
 
 const RULES: Rule[] = [
-  // Descuento general de la lista de precios del cliente (el nombre de la lista NO se muestra).
-  { id: "PR-LISTA-CLIENTE", productIds: [], discountRate: 0.1 },
   // Escala 12+1 en salsas doypack KRIS: cada 12 unidades, 1 gratis del mismo producto.
   {
     id: "PR-ESCALA-12-1",
@@ -50,13 +50,11 @@ const RULES: Rule[] = [
     bonusQty: 1,
     hintWindow: 6,
   },
-  // Combo Bristar: desde 1 caja (12) de lavavajillas doypack → 5 % extra en esa línea Y un
-  // vajillero 2 L gratis (ejemplo de regla que es descuento y bonificación a la vez).
+  // Combo Bristar: desde 1 caja (12) de lavavajillas doypack → un vajillero 2 L gratis.
   {
     id: "PR-COMBO-BRISTAR",
     productIds: ["lavavajillas-limon-bristar-doypack-301278"],
     minUnits: 12,
-    discountRate: 0.05,
     bonusQty: 1,
     bonusProductId: "vajillero-limon-bristar-301033",
     hintWindow: 6,
@@ -72,7 +70,6 @@ export interface QuoteLine extends CartLineInput {
   /** Precio del bulto/unidad elegida antes de reglas. */
   itemPrice: number
   gross: number
-  discount: number
   net: number
   rulesApplied: string[]
 }
@@ -113,7 +110,6 @@ export interface Quote {
   /** Puntos Venado Money que consume este pedido. */
   pointsCost: number
   gross: number
-  discount: number
   net: number
   /** IVA 13 % incluido en el neto (informativo). */
   iva: number
@@ -147,16 +143,7 @@ export function quoteCart(input: CartLineInput[], redeemInput: RedeemLineInput[]
     const units = l.quantity * unitsPer(product, l.unit)
     const unitPrice = mockPrice(product)
     const gross = unitPrice * units
-    let rate = 0
     const rulesApplied: string[] = []
-    for (const r of RULES) {
-      if (!r.discountRate) continue
-      if (r.productIds.length && !r.productIds.includes(product.id)) continue
-      if (r.minUnits && (unitsByProduct.get(product.id) ?? 0) < r.minUnits) continue
-      rate += r.discountRate
-      rulesApplied.push(r.id)
-    }
-    const discount = round2(gross * rate)
     lines.push({
       ...l,
       product,
@@ -164,8 +151,7 @@ export function quoteCart(input: CartLineInput[], redeemInput: RedeemLineInput[]
       unitPrice,
       itemPrice: unitPrice * unitsPer(product, l.unit),
       gross: round2(gross),
-      discount,
-      net: round2(gross - discount),
+      net: round2(gross),
       rulesApplied,
     })
   }
@@ -195,8 +181,7 @@ export function quoteCart(input: CartLineInput[], redeemInput: RedeemLineInput[]
         if (units >= r.minUnits) {
           bonuses.push({ product: bonusProduct, quantity: r.bonusQty, ruleId: r.id, triggeredBy: product })
         } else if (r.hintWindow && units >= r.minUnits - r.hintWindow) {
-          const extra = r.discountRate ? ` y ${Math.round(r.discountRate * 100)} % extra de descuento` : ""
-          hints.push({ product, missingUnits: r.minUnits - units, ruleId: r.id, reward: reward + extra })
+          hints.push({ product, missingUnits: r.minUnits - units, ruleId: r.id, reward })
         }
       }
     }
@@ -211,12 +196,11 @@ export function quoteCart(input: CartLineInput[], redeemInput: RedeemLineInput[]
   const pointsCost = redeems.reduce((a, r) => a + r.pointsTotal, 0)
 
   const gross = round2(lines.reduce((a, l) => a + l.gross, 0))
-  const discount = round2(lines.reduce((a, l) => a + l.discount, 0))
-  const net = round2(gross - discount)
+  const net = gross
   const iva = round2(net - net / (1 + IVA))
   const itemCount = input.reduce((a, l) => a + l.quantity, 0) + redeems.reduce((a, r) => a + r.quantity, 0)
 
-  return { lines, bonuses, hints, redeems, pointsCost, gross, discount, net, iva, itemCount }
+  return { lines, bonuses, hints, redeems, pointsCost, gross, net, iva, itemCount }
 }
 
 function round2(n: number): number {

@@ -12,6 +12,7 @@ import { OrderStatus } from "@/screens/OrderStatus"
 import { PaymentQR } from "@/screens/PaymentQR"
 import { ProductDetail } from "@/screens/ProductDetail"
 import { Profile } from "@/screens/Profile"
+import { EarnStrategies } from "@/screens/money/EarnStrategies"
 import { PointsHome } from "@/screens/money/PointsHome"
 import { PointsHistory } from "@/screens/money/PointsHistory"
 import { RedeemCatalog } from "@/screens/money/RedeemCatalog"
@@ -30,6 +31,7 @@ function App() {
         <Route path="/perfil" element={<Profile />} />
         <Route path="/puntos" element={<PointsHome />} />
         <Route path="/puntos/canjear" element={<RedeemCatalog />} />
+        <Route path="/puntos/como-sumar" element={<EarnStrategies />} />
         <Route path="/puntos/extracto" element={<PointsHistory />} />
         <Route path="/puntos/niveles" element={<Tiers />} />
       </Route>

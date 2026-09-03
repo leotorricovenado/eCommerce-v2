@@ -88,7 +88,7 @@ export function HeroCarousel({ slides, intervalMs = 5500 }: HeroCarouselProps) {
             <div
               key={s.id}
               className={cn(
-                "relative flex h-56 w-full shrink-0 snap-center overflow-hidden sm:h-64",
+                "relative flex h-44 w-full shrink-0 snap-center overflow-hidden sm:h-52",
                 tone.bg,
                 tone.text
               )}
@@ -97,7 +97,7 @@ export function HeroCarousel({ slides, intervalMs = 5500 }: HeroCarouselProps) {
               <span className="pointer-events-none absolute -top-16 -right-8 size-56 rounded-full bg-primary-foreground/10 sm:size-72" />
               <span className="pointer-events-none absolute -bottom-24 right-24 size-48 rounded-full bg-primary-foreground/10" />
 
-              <div className="relative z-10 flex w-[62%] flex-col justify-center gap-2 p-5 sm:w-[58%] sm:p-8">
+              <div className="relative z-10 flex w-[62%] flex-col justify-center gap-1.5 p-4 sm:w-[58%] sm:p-6">
                 <span
                   className={cn(
                     "w-fit rounded-full px-2.5 py-1 text-[10px] font-bold tracking-widest uppercase",
@@ -106,7 +106,7 @@ export function HeroCarousel({ slides, intervalMs = 5500 }: HeroCarouselProps) {
                 >
                   {s.eyebrow}
                 </span>
-                <h1 className="text-xl leading-[1.1] sm:text-3xl">{s.title}</h1>
+                <h1 className="text-lg leading-[1.1] sm:text-2xl">{s.title}</h1>
                 <p className="text-xs opacity-85 sm:text-sm">{s.subtitle}</p>
                 <Link
                   to={s.to}
@@ -123,7 +123,7 @@ export function HeroCarousel({ slides, intervalMs = 5500 }: HeroCarouselProps) {
               <img
                 src={s.image}
                 alt=""
-                className="pointer-events-none absolute -right-3 bottom-[-6%] z-0 h-[112%] w-[46%] -rotate-6 object-contain drop-shadow-2xl sm:right-4 sm:w-[40%]"
+                className="pointer-events-none absolute -right-3 bottom-[-6%] z-0 h-[108%] w-[46%] -rotate-6 object-contain drop-shadow-2xl sm:right-4 sm:w-[40%]"
               />
             </div>
           )

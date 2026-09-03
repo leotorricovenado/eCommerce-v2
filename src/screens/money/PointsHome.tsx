@@ -1,12 +1,11 @@
-import { ArrowDownLeft, ArrowUpRight, CalendarClock, ChevronRight, Coins, Gift, Medal, ReceiptText, ShoppingBag, Sparkles, Truck, Zap } from "lucide-react"
+import { ArrowDownLeft, ArrowUpRight, CalendarClock, ChevronRight, Coins, Gift, Medal, ReceiptText, ShoppingBag, Sparkles, Truck } from "lucide-react"
 import { Link } from "react-router"
 
 import { SectionHeader } from "@/components/home/SectionHeader"
 import { PointsPill, ProgressRing, TierBadge, formatPts } from "@/components/money/PointsUI"
 import { RedeemProductCard } from "@/components/money/RedeemProductCard"
-import { EXPIRY_MONTHS, POINTS_PER_BS, REDEEM_BS_PER_POINT, promoProducts, redeemables } from "@/data/venadoMoney"
-import { ProductThumb } from "@/components/checkout/OrderLines"
-import { formatBs } from "@/lib/format"
+import { EARN_STRATEGIES, EXPIRY_MONTHS, redeemables } from "@/data/venadoMoney"
+import { EarnStrategyList } from "@/components/money/EarnStrategyList"
 import { formatShortDate } from "@/lib/dates"
 import { cn } from "@/lib/utils"
 import { usePoints } from "@/state/points"
@@ -31,7 +30,6 @@ export function PointsHome() {
               <span className="cn-font-heading text-5xl tabular-nums">{balance.toLocaleString("es-BO")}</span>
               <span className="mt-1 text-sm font-semibold">puntos disponibles</span>
             </div>
-            <span className="text-xs opacity-85">≈ {formatBs(balance * REDEEM_BS_PER_POINT)} en productos</span>
             <TierBadge tier={tier} className="w-fit bg-card/80" />
           </div>
           <ProgressRing value={progress.pct} size={104} className="text-money-foreground">
@@ -63,10 +61,11 @@ export function PointsHome() {
       )}
 
       {/* Accesos */}
-      <div className="grid grid-cols-3 gap-2">
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
         {[
           { to: "/puntos/canjear", icon: Gift, label: "Canjear", hint: `${redeemables.length} productos` },
           { to: "/puntos/extracto", icon: ReceiptText, label: "Extracto", hint: `${movements.length} movimientos` },
+          { to: "/puntos/como-sumar", icon: Sparkles, label: "Cómo sumar", hint: `${EARN_STRATEGIES.length} formas` },
           { to: "/puntos/niveles", icon: Medal, label: "Niveles", hint: tier.benefit },
         ].map(({ to, icon: Icon, label, hint }) => (
           <Link
@@ -93,32 +92,16 @@ export function PointsHome() {
         </div>
       </section>
 
-      {/* Promos de puntos */}
-      {promoProducts.length > 0 && (
-        <section>
-          <SectionHeader title="Promos de puntos" subtitle="Productos que suman más" to={`/catalogo?marca=${encodeURIComponent(promoProducts[0]!.product.brand ?? "")}`} linkLabel="Ver todo" />
-          <div className="flex flex-col gap-2">
-            {promoProducts.slice(0, 3).map(({ product, rule }) => (
-              <Link
-                key={product.id}
-                to={`/producto/${product.id}`}
-                className="flex items-center gap-3 rounded-3xl bg-money-foreground p-3 text-card shadow-lg transition-all hover:-translate-y-0.5"
-              >
-                <ProductThumb product={product} className="size-14 bg-card" />
-                <div className="flex min-w-0 flex-1 flex-col">
-                  <span className="flex items-center gap-1 text-[10px] font-bold tracking-widest text-money uppercase">
-                    <Zap className="size-3" strokeWidth={2.5} />
-                    {rule.label}
-                  </span>
-                  <span className="truncate text-sm font-semibold">{product.name}</span>
-                  <span className="truncate text-[11px] opacity-75">{rule.description}</span>
-                </div>
-                <ChevronRight className="size-4 shrink-0 opacity-70" />
-              </Link>
-            ))}
-          </div>
-        </section>
-      )}
+      {/* Productos que suman puntos */}
+      <section>
+        <SectionHeader
+          title="Productos que suman puntos"
+          subtitle="Comprá estos y sumá Venado Money"
+          to="/puntos/como-sumar"
+          linkLabel="Ver todo"
+        />
+        <EarnStrategyList strategies={EARN_STRATEGIES.slice(0, 3)} />
+      </section>
 
       {/* Movimientos */}
       <section>
@@ -151,8 +134,8 @@ export function PointsHome() {
       <section className="flex flex-col gap-3 rounded-3xl bg-money/10 p-4 ring-1 ring-money/20">
         <h2 className="text-base">¿Cómo funciona?</h2>
         {[
-          { icon: ShoppingBag, text: `Cada pedido pagado suma 1 punto por cada Bs ${Math.round(1 / POINTS_PER_BS)}. Los ves acreditados al confirmarse.` },
-          { icon: Sparkles, text: "Subís de nivel con los puntos acumulados y ganás más puntos por pedido." },
+          { icon: ShoppingBag, text: "Sumás puntos comprando los productos de la lista: cada estrategia premia una cantidad de unidades." },
+          { icon: Sparkles, text: "Subís de nivel con los puntos acumulados y cada estrategia te rinde más." },
           { icon: Truck, text: "Canjeás productos desde el catálogo de canje: viajan en tu próximo pedido, sin costo en Bs." },
         ].map(({ icon: Icon, text }) => (
           <div key={text} className="flex items-start gap-3">

@@ -16,8 +16,8 @@ interface QuoteSummaryProps {
 }
 
 /**
- * Resumen económico. Solo muestra EFECTOS de las reglas de precio (descuento, bonificación) —
- * nunca el nombre de la lista de precios ni de la regla (decisión del usuario 2026-09-02).
+ * Resumen económico. Solo muestra EFECTOS de las reglas de precio (bonificación) — nunca el
+ * nombre de la lista de precios ni de la regla, y sin descuentos (decisión de negocio 2026-09-03).
  */
 export function QuoteSummary({ quote, totalLabel = "Total a pagar", pointsEarned, pointsUsed, className }: QuoteSummaryProps) {
   const bonusUnits = quote.bonuses.reduce((a, b) => a + b.quantity, 0)
@@ -25,7 +25,6 @@ export function QuoteSummary({ quote, totalLabel = "Total a pagar", pointsEarned
   return (
     <div className={cn("flex flex-col gap-2 rounded-3xl bg-card p-4 ring-1 ring-foreground/5", className)}>
       <Row label="Subtotal" value={formatBs(quote.gross)} />
-      {quote.discount > 0 && <Row label="Descuentos" value={`- ${formatBs(quote.discount)}`} tone="success" />}
       {bonusUnits > 0 && (
         <Row
           label={

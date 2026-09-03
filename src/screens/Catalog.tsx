@@ -2,7 +2,6 @@ import {
   ArrowDownAZ,
   ArrowDownWideNarrow,
   ArrowUpNarrowWide,
-  BadgePercent,
   Check,
   LayoutGrid,
   Search,
@@ -26,7 +25,7 @@ import { brandFamily } from "@/data/brandFamily"
 import { brandLogos } from "@/data/brandLogos"
 import { brands as allBrands, categories } from "@/data/categories"
 import { categoryIcons } from "@/data/categoryIcons"
-import { mockDiscountPercent, mockPrice } from "@/data/mockPricing"
+import { mockPrice } from "@/data/mockPricing"
 import { hasProductImage, productImage } from "@/data/productImages"
 import { products, type Product } from "@/data/products"
 import { tintForCategory } from "@/lib/categoryTint"
@@ -65,7 +64,6 @@ export function Catalog() {
   const categoryId = params.get("categoria") ?? ""
   const subId = params.get("sub") ?? ""
   const brand = params.get("marca") ?? ""
-  const onlyDeals = params.get("ofertas") === "1"
   const query = params.get("q") ?? ""
   const sort = (params.get("orden") as SortKey | null) ?? "relevancia"
   const wantsFocus = params.get("buscar") === "1"
@@ -102,16 +100,13 @@ export function Catalog() {
     if (category) list = list.filter((p) => p.categoryId === category.id)
     if (subcategory) list = list.filter((p) => p.subcategoryId === subcategory.id)
     if (brand) list = list.filter((p) => p.brand === brand)
-    if (onlyDeals) list = list.filter((p) => mockDiscountPercent(p) > 0)
     if (query) list = list.filter((p) => matchesQuery(query, [p.name, p.brand, p.sku, p.size]))
     return sortProducts(list, sort)
-  }, [category, subcategory, brand, onlyDeals, query, sort])
+  }, [category, subcategory, brand, query, sort])
 
   const shown = filtered.slice(0, visible)
   const brandOptions = category ? category.brands : allBrands
-  const activeFilterCount = [brand, onlyDeals ? "1" : "", sort !== "relevancia" ? "1" : ""].filter(
-    Boolean
-  ).length
+  const activeFilterCount = [brand, sort !== "relevancia" ? "1" : ""].filter(Boolean).length
   const bannerPhoto = category
     ? productImage(products.find((p) => p.categoryId === category.id && hasProductImage(p)) ?? { id: "", sku: null })
     : undefined
@@ -259,12 +254,11 @@ export function Catalog() {
       </div>
 
       {/* Filtros activos */}
-      {(brand || onlyDeals || sort !== "relevancia") && (
+      {(brand || sort !== "relevancia") && (
         <div className="no-scrollbar -mx-4 -mt-1 flex gap-2 overflow-x-auto px-4">
           {brand && (
             <ActiveChip onRemove={() => update({ marca: null })}>Marca: {brand}</ActiveChip>
           )}
-          {onlyDeals && <ActiveChip onRemove={() => update({ ofertas: null })}>Solo ofertas</ActiveChip>}
           {sort !== "relevancia" && (
             <ActiveChip onRemove={() => update({ orden: null })}>
               {SORTS.find((s) => s.key === sort)?.label}
@@ -310,7 +304,7 @@ export function Catalog() {
           <button
             type="button"
             onClick={() =>
-              update({ q: null, marca: null, ofertas: null, orden: null, sub: null, categoria: null })
+              update({ q: null, marca: null, orden: null, sub: null, categoria: null })
             }
             className="h-10 cursor-pointer rounded-full bg-primary px-5 text-sm font-bold text-primary-foreground shadow-md shadow-primary/20 active:scale-95"
           >
@@ -369,37 +363,6 @@ export function Catalog() {
             </section>
 
             <section className="flex flex-col gap-2">
-              <FilterLabel>Ofertas</FilterLabel>
-              <button
-                type="button"
-                aria-pressed={onlyDeals}
-                onClick={() => update({ ofertas: onlyDeals ? null : "1" })}
-                className={cn(
-                  "flex h-11 cursor-pointer items-center gap-3 rounded-2xl px-3 text-sm font-medium ring-1 transition-all",
-                  onlyDeals
-                    ? "bg-accent/10 text-accent ring-accent"
-                    : "bg-card ring-foreground/5 hover:ring-accent/40"
-                )}
-              >
-                <BadgePercent className="size-4" strokeWidth={2} />
-                <span className="flex-1 text-left">Solo productos con descuento</span>
-                <span
-                  className={cn(
-                    "flex h-6 w-10 items-center rounded-full p-0.5 transition-colors",
-                    onlyDeals ? "bg-accent" : "bg-muted"
-                  )}
-                >
-                  <span
-                    className={cn(
-                      "size-5 rounded-full bg-card shadow-sm transition-transform",
-                      onlyDeals && "translate-x-4"
-                    )}
-                  />
-                </span>
-              </button>
-            </section>
-
-            <section className="flex flex-col gap-2">
               <FilterLabel>Marca</FilterLabel>
               <div className="flex flex-wrap gap-2">
                 <Pill active={!brand} onClick={() => update({ marca: null })}>
@@ -427,7 +390,7 @@ export function Catalog() {
           <div className="sticky bottom-0 mt-auto flex gap-2 bg-background/95 px-5 py-4 backdrop-blur-md">
             <button
               type="button"
-              onClick={() => update({ marca: null, ofertas: null, orden: null })}
+              onClick={() => update({ marca: null, orden: null })}
               className="h-12 cursor-pointer rounded-full bg-card px-5 text-sm font-bold ring-1 ring-foreground/10 active:scale-95"
             >
               Limpiar
