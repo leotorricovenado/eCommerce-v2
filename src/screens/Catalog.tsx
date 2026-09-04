@@ -10,7 +10,7 @@ import {
   X,
   type LucideIcon,
 } from "lucide-react"
-import { useEffect, useMemo, useRef, useState } from "react"
+import { useMemo, useState } from "react"
 import { useSearchParams } from "react-router"
 
 import { ProductCard } from "@/components/ProductCard"
@@ -66,12 +66,18 @@ export function Catalog() {
   const brand = params.get("marca") ?? ""
   const query = params.get("q") ?? ""
   const sort = (params.get("orden") as SortKey | null) ?? "relevancia"
-  const wantsFocus = params.get("buscar") === "1"
 
   const [sheetOpen, setSheetOpen] = useState(false)
   const [visible, setVisible] = useState(PAGE_SIZE)
-  const searchRef = useRef<HTMLInputElement>(null)
   const isDesktop = useMediaQuery("(min-width: 640px)")
+
+  // El buscador vive en la TopBar (sticky) y escribe `q` en la URL sin pasar por `update()`, así
+  // que la paginación se reinicia acá al cambiar lo buscado (ajuste durante el render, no efecto).
+  const [pagedQuery, setPagedQuery] = useState(query)
+  if (pagedQuery !== query) {
+    setPagedQuery(query)
+    setVisible(PAGE_SIZE)
+  }
 
   const update = (patch: Record<string, string | null>) => {
     const next = new URLSearchParams(params)
@@ -82,15 +88,6 @@ export function Catalog() {
     setParams(next, { replace: true })
     setVisible(PAGE_SIZE)
   }
-
-  // La TopBar manda a /catalogo?buscar=1 para enfocar el buscador; el flag se consume una vez.
-  useEffect(() => {
-    if (!wantsFocus) return
-    searchRef.current?.focus()
-    const next = new URLSearchParams(params)
-    next.delete("buscar")
-    setParams(next, { replace: true })
-  }, [wantsFocus, params, setParams])
 
   const category = categories.find((c) => c.id === categoryId)
   const subcategory = category?.subcategories.find((s) => s.id === subId)
@@ -114,30 +111,6 @@ export function Catalog() {
 
   return (
     <div className="flex flex-col gap-4 px-4 pt-3 pb-8">
-      {/* Buscador */}
-      <div className="flex h-12 items-center gap-2 rounded-full bg-card px-4 shadow-sm ring-1 ring-foreground/5 transition-all focus-within:ring-2 focus-within:ring-primary/40">
-        <Search className="size-4 shrink-0 text-primary" />
-        <input
-          ref={searchRef}
-          type="search"
-          value={query}
-          onChange={(e) => update({ q: e.target.value })}
-          placeholder="Buscar por nombre, marca o código"
-          aria-label="Buscar productos"
-          className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground [&::-webkit-search-cancel-button]:hidden"
-        />
-        {query && (
-          <button
-            type="button"
-            aria-label="Limpiar búsqueda"
-            onClick={() => update({ q: null })}
-            className="flex size-6 cursor-pointer items-center justify-center rounded-full bg-muted text-muted-foreground hover:text-foreground"
-          >
-            <X className="size-3.5" strokeWidth={2.5} />
-          </button>
-        )}
-      </div>
-
       {/* Banner de marca (entrada desde los logos del Home) */}
       {brand && (
         <BrandBanner

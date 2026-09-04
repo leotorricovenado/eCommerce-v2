@@ -4,6 +4,7 @@ import { BrandRail } from "@/components/home/BrandRail"
 import { CategoryShowcase } from "@/components/home/CategoryShowcase"
 import { HeroCarousel, type HeroSlide } from "@/components/home/HeroCarousel"
 import { PointsCard } from "@/components/home/PointsCard"
+import { RecommendedProducts } from "@/components/home/RecommendedProducts"
 import { SectionHeader } from "@/components/home/SectionHeader"
 import { ProductCard } from "@/components/ProductCard"
 import { brands, categories, type Category } from "@/data/categories"
@@ -86,17 +87,6 @@ function spreadByCategory(pool: Product[], limit: number): Product[] {
 // legítima para esta sección es el flag real `isPareto` de sale.products — ver CLAUDE.md.)
 const mostOrdered = spreadByCategory(products.filter(hasProductImage), 10)
 
-// Recomendados del Home (pedido del usuario 2026-09-03): jugos y bebidas de fruta con foto real.
-// En real esta sección la alimentaría Sales (ej. `isPareto` / recomendaciones por cliente).
-const RECOMMENDED_IDS = [
-  "bebida-de-la-granja-naranja-600206",
-  "bebida-de-la-granja-pomelo-600219",
-  "refresco-frussion-naranja-600113",
-  "nectar-de-la-granja-durazno-600198",
-  "refresco-frussion-mango-600160",
-  "nectar-de-la-granja-manzana-600196",
-]
-const recommended = RECOMMENDED_IDS.map(productById)
 
 export function Home() {
   return (
@@ -122,18 +112,7 @@ export function Home() {
 
       <PointsCard />
 
-      <section>
-        <SectionHeader
-          title="Productos recomendados"
-          subtitle="Jugos y bebidas de fruta para tu heladera"
-          to="/catalogo?categoria=bebidas-rtd"
-        />
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-          {recommended.map((p) => (
-            <ProductCard key={p.id} product={p} />
-          ))}
-        </div>
-      </section>
+      <RecommendedProducts />
 
       <section>
         <SectionHeader

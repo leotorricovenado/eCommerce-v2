@@ -331,6 +331,36 @@ Dos layouts en `src/components/chrome/`:
   Oro 50 % más de puntos) **se mantienen**: el usuario acotó el pedido a los descuentos. El hero
   carrusel del Home bajó de `h-56/sm:h-64` a `h-44/sm:h-52` (título y padding ajustados) porque el
   banner tapaba demasiado el contenido.
+- ✅ **Una sola barra de búsqueda (2026-09-03)**: el usuario notó que en el Catálogo había **dos**
+  buscadores (el de la `TopBar` y el de la pantalla). Ahora el buscador vive **solo en la `TopBar`**:
+  en `/catalogo` esa barra deja de ser un link y se convierte en el `<input>` real (live search sobre
+  `?q=`, con botón X para limpiar); en el resto de las pantallas sigue siendo el link a
+  `/catalogo?buscar=1`, y ese flag ahora lo consume la `TopBar` para enfocar su propio input. Ventaja
+  extra: como la `TopBar` es sticky, el buscador queda disponible mientras scrolleás la grilla. El
+  `Catalog` perdió su input, su `searchRef` y el efecto de foco; a cambio reinicia la paginación
+  (`visible = PAGE_SIZE`) cuando cambia `q` **ajustando estado durante el render** (`pagedQuery`), no
+  con un `useEffect` — oxlint marca `react(set-state-in-effect)` y es el patrón que recomienda React.
+  Hace falta porque ahora quien escribe ese param es la TopBar y no el `update()` del catálogo.
+- ✅ **"Productos recomendados" con chips de grupo (2026-09-03)**. Pedido del usuario: el
+  microservicio de estrategias va a recomendar de varias marcas o categorías, así que la sección
+  necesita un control para cambiar entre ellas. `src/data/recommendations.ts` (SIMULADO) modela lo
+  que mandaría ese servicio: `RECOMMENDATION_GROUPS[]`, cada grupo con `label`, `subtitle` y un
+  `scope` discriminado igual al de las estrategias de puntos — `brand` / `category` / `subcategory` /
+  `product` (lista explícita). `productsForGroup()` resuelve contra el catálogo real priorizando los
+  que tienen foto; `recommendedForYou()` arma el chip "Para vos" mezclando **round-robin** todos los
+  grupos (así se ven varias marcas y categorías juntas, que es el caso real); `groupLink()` da el
+  destino de "Ver todo" (`?marca=` o `?categoria=`). UI en
+  `components/home/RecommendedProducts.tsx`: fila de chips scrollable debajo del título — "Para vos"
+  + un chip por grupo, con **logo real si el scope es marca**, ícono tintado de categoría si es
+  categoría y estrella si es lista de productos. Decisiones preguntadas al usuario: chips = grupos
+  mixtos del servicio (no dos filas marca/categoría), y **6 productos + "Ver todo"** al catálogo
+  filtrado en vez de rail o "ver más". El grupo activo vive en la URL (`/?reco=<id>`) como el resto
+  del estado de filtros, así volver desde un producto no resetea la grilla. `Home.tsx` perdió su
+  `RECOMMENDED_IDS`. **Grupos vigentes: KRIS, Bristar, Salsas y Limpieza del Hogar** — el grupo
+  "Para tu heladera" (los 6 jugos, único con scope `product`) lo sacó el usuario el 2026-09-03; el
+  scope `product` sigue soportado en el modelo porque el servicio real puede mandar listas explícitas.
+  Como los grupos se pisan (una marca cae dentro de una categoría), el mix de "Para vos" descarta
+  repetidos **por nombre**, no solo por id: si no, salía el mismo lavavajillas en dos tamaños.
 - ⏳ Pendiente del mapa completo: Deudas, WhatsApp entry (chat simulado), Login (pospuestos).
 
 ## Notas de entorno / herramientas (no del código)
