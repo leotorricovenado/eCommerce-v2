@@ -34,7 +34,10 @@ export function ProductCard({ product, className }: ProductCardProps) {
     <article
       className={cn(
         "group relative flex flex-col overflow-hidden rounded-2xl bg-card shadow-sm ring-1 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg",
-        quantity > 0 ? "ring-primary/40" : "ring-foreground/5",
+        // El contorno café marca los productos que suman a un objetivo (sin prometer puntos por
+        // unidad: el premio se cobra al cumplir la meta). Si el producto ya está en el carrito
+        // manda el anillo azul, que es el feedback de "lo llevás".
+        quantity > 0 ? "ring-primary/40" : earnStrategy ? "ring-2 ring-money-foreground/35" : "ring-foreground/5",
         className
       )}
     >
@@ -66,10 +69,14 @@ export function ProductCard({ product, className }: ProductCardProps) {
         )}
 
         {earnStrategy && (
-          // Los puntos son el premio del OBJETIVO al que aporta este producto, no de la unidad.
-          <span className="absolute bottom-2 left-2 inline-flex items-center gap-0.5 rounded-full bg-money-foreground px-1.5 py-0.5 text-[10px] font-bold text-card shadow-sm">
-            <Target className="size-2.5" strokeWidth={2.5} />
-            Objetivo +{earnStrategy.points} pts
+          // Solo la marca de pertenencia: la meta, el progreso y el premio se explican en el
+          // detalle, en el carrito y en /puntos/objetivos, donde hay lugar para el contexto.
+          <span
+            title={`Suma a tu objetivo de ${earnStrategy.name}`}
+            aria-label={`Suma a tu objetivo de ${earnStrategy.name}`}
+            className="absolute top-2 left-2 flex size-6 items-center justify-center rounded-full bg-money-foreground text-card shadow-sm"
+          >
+            <Target className="size-3.5" strokeWidth={2.5} />
           </span>
         )}
         {quantity > 0 && (

@@ -63,7 +63,7 @@ function RecommendedCard({ product }: { product: Product }) {
     <article
       className={cn(
         "flex w-36 shrink-0 snap-start flex-col overflow-hidden rounded-2xl bg-card shadow-sm ring-1 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg sm:w-40",
-        quantity > 0 ? "ring-primary/40" : "ring-foreground/5"
+        quantity > 0 ? "ring-primary/40" : strategy ? "ring-2 ring-money-foreground/35" : "ring-foreground/5"
       )}
     >
       <Link
@@ -92,9 +92,13 @@ function RecommendedCard({ product }: { product: Product }) {
           </div>
         )}
         {strategy && (
-          <span className="absolute bottom-1.5 left-1.5 inline-flex items-center gap-0.5 rounded-full bg-money-foreground px-1.5 py-0.5 text-[10px] font-bold text-card shadow-sm">
-            <Target className="size-2.5" strokeWidth={2.5} />
-            Objetivo +{strategy.points} pts
+          // Misma marca que en ProductCard: contorno café + ícono, sin número de puntos.
+          <span
+            title={`Suma a tu objetivo de ${strategy.name}`}
+            aria-label={`Suma a tu objetivo de ${strategy.name}`}
+            className="absolute top-1.5 left-1.5 flex size-5 items-center justify-center rounded-full bg-money-foreground text-card shadow-sm"
+          >
+            <Target className="size-3" strokeWidth={2.5} />
           </span>
         )}
       </Link>

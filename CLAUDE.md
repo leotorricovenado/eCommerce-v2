@@ -439,7 +439,14 @@ Dos layouts en `src/components/chrome/`:
   camino que un producto (`prizeAsProduct` los presenta como `Product`, así carrito, cotización y
   pedido no cambiaron); en el filtro del catálogo de canje son una pseudo-categoría
   (`grandes-premios`, ícono `Trophy`). En producción los administra el microservicio de puntos/premios
-  de DEAL (alta, foto, costo, vigencia, cupo).
+  de DEAL (alta, foto, costo, vigencia, cupo). (c) **El badge "Objetivo +20 pts" salió de las cards**
+  (`ProductCard` y las de `CartRecommendations`): daba a entender que ese producto solo bonificaba
+  20 pts por comprarlo, cuando los puntos son el premio de una META acumulativa. Idea del usuario:
+  marcar la card con el **contorno café** (`ring-2 ring-money-foreground/35`) + el ícono `Target` en
+  la esquina superior izquierda, sin número — así se ve de un vistazo qué productos sirven para
+  cumplir objetivos. Si el producto está en el carrito manda el anillo azul (feedback de "lo
+  llevás"). La meta, el progreso y el premio siguen contándose donde hay lugar para el contexto:
+  detalle de producto, `CartGoals` y `/puntos/objetivos`.
 - ⏳ Pendiente del mapa completo: Deudas, WhatsApp entry (chat simulado), Login (pospuestos).
 
 ## Notas de entorno / herramientas (no del código)
