@@ -1,8 +1,8 @@
-import { Check, Coins, Info, Target } from "lucide-react"
+import { Check, Coins, Target } from "lucide-react";
 
-import { GoalCard } from "@/components/money/GoalUI"
-import { goalStatuses } from "@/data/venadoMoney"
-import { usePoints } from "@/state/points"
+import { GoalCard } from "@/components/money/GoalUI";
+import { goalStatuses } from "@/data/venadoMoney";
+import { usePoints } from "@/state/points";
 
 /**
  * "Tus objetivos": todo lo que el cliente puede cumplir para ganar puntos. En real la lista llega
@@ -13,10 +13,10 @@ import { usePoints } from "@/state/points"
  * igual — meta, progreso y premio.
  */
 export function Goals() {
-  const { tier, goals } = usePoints()
-  const statuses = goalStatuses(goals)
-  const active = statuses.filter((g) => !g.done)
-  const done = statuses.filter((g) => g.done)
+  const { tier, goals } = usePoints();
+  const statuses = goalStatuses(goals);
+  const active = statuses.filter((g) => !g.done);
+  const done = statuses.filter((g) => g.done);
 
   return (
     <div className="flex flex-col gap-6 px-4 pt-3 pb-8">
@@ -25,10 +25,10 @@ export function Goals() {
           <Coins className="size-3.5" strokeWidth={2.5} />
           Venado Money
         </span>
-        <h1 className="text-2xl leading-none">Tus objetivos</h1>
+        <h1 className="text-2xl leading-none">Suma puntos</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Cada objetivo tiene una meta y un premio en puntos. Se cumplen sumando todas tus compras:
-          no hace falta llegar en un solo pedido.
+          Por la compra de ciertos productos te generan puntos. Se cumplen
+          sumando todas tus compras: no hace falta llegar en un solo pedido.
         </p>
       </div>
 
@@ -51,11 +51,18 @@ export function Goals() {
       {active.length > 0 && (
         <section className="flex flex-col gap-3">
           <h2 className="flex items-center gap-1.5 text-base">
-            <Target className="size-4 text-money-foreground" strokeWidth={2.5} />
+            <Target
+              className="size-4 text-money-foreground"
+              strokeWidth={2.5}
+            />
             En curso
           </h2>
           {active.map((status) => (
-            <GoalCard key={status.strategy.id} status={status} multiplier={tier.multiplier} />
+            <GoalCard
+              key={status.strategy.id}
+              status={status}
+              multiplier={tier.multiplier}
+            />
           ))}
         </section>
       )}
@@ -67,20 +74,14 @@ export function Goals() {
             Cumplidos
           </h2>
           {done.map((status) => (
-            <GoalCard key={status.strategy.id} status={status} multiplier={tier.multiplier} />
+            <GoalCard
+              key={status.strategy.id}
+              status={status}
+              multiplier={tier.multiplier}
+            />
           ))}
         </section>
       )}
-
-      <div className="flex items-start gap-3 rounded-2xl bg-card p-4 ring-1 ring-foreground/5">
-        <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
-          <Info className="size-4" />
-        </span>
-        <p className="text-[13px] leading-snug text-muted-foreground">
-          Los objetivos cambian cada tanto y son distintos para cada negocio. Te avisamos por
-          WhatsApp cuando tengas objetivos nuevos o estés por cumplir alguno.
-        </p>
-      </div>
     </div>
-  )
+  );
 }

@@ -1,28 +1,45 @@
-import { AlertTriangle, ArrowRight, Coins, Gift, Minus, Plus, ShoppingCart, Target, Trash2 } from "lucide-react"
-import { Link, useNavigate } from "react-router"
+import {
+  AlertTriangle,
+  ArrowRight,
+  Coins,
+  Gift,
+  Minus,
+  Plus,
+  ShoppingCart,
+  Trash2,
+} from "lucide-react";
+import { Link, useNavigate } from "react-router";
 
-import { CartGoals } from "@/components/checkout/CartGoals"
-import { CartNudges } from "@/components/checkout/CartNudges"
-import { CartRecommendations } from "@/components/checkout/CartRecommendations"
-import { CheckoutSteps } from "@/components/checkout/CheckoutSteps"
-import { ProductThumb } from "@/components/checkout/OrderLines"
-import { QuoteSummary } from "@/components/checkout/QuoteSummary"
-import { formatPts } from "@/components/money/PointsUI"
-import { earnBreakdown, strategiesFor } from "@/data/venadoMoney"
-import { usePoints } from "@/state/points"
-import type { QuoteLine, RedeemLine } from "@/data/priceRules"
-import { formatBs, parsePackaging } from "@/lib/format"
-import { cn } from "@/lib/utils"
-import { useCart } from "@/state/cart"
+import { CartGoals } from "@/components/checkout/CartGoals";
+import { CartNudges } from "@/components/checkout/CartNudges";
+import { CartRecommendations } from "@/components/checkout/CartRecommendations";
+import { CheckoutSteps } from "@/components/checkout/CheckoutSteps";
+import { ProductThumb } from "@/components/checkout/OrderLines";
+import { QuoteSummary } from "@/components/checkout/QuoteSummary";
+import { formatPts } from "@/components/money/PointsUI";
+import type { QuoteLine, RedeemLine } from "@/data/priceRules";
+import { earnBreakdown } from "@/data/venadoMoney";
+import { formatBs, parsePackaging } from "@/lib/format";
+import { cn } from "@/lib/utils";
+import { useCart } from "@/state/cart";
+import { usePoints } from "@/state/points";
 
 export function Cart() {
-  const navigate = useNavigate()
-  const { quote, add, setQuantity, setUnit, remove, setRedeemQuantity, removeRedeem } = useCart()
-  const { balance, tier, goals } = usePoints()
-  const earn = earnBreakdown(quote, tier, goals)
-  const pointsEarned = earn.total
-  const pointsMissing = Math.max(0, quote.pointsCost - balance)
-  const canContinue = pointsMissing === 0
+  const navigate = useNavigate();
+  const {
+    quote,
+    add,
+    setQuantity,
+    setUnit,
+    remove,
+    setRedeemQuantity,
+    removeRedeem,
+  } = useCart();
+  const { balance, tier, goals } = usePoints();
+  const earn = earnBreakdown(quote, tier, goals);
+  const pointsEarned = earn.total;
+  const pointsMissing = Math.max(0, quote.pointsCost - balance);
+  const canContinue = pointsMissing === 0;
 
   if (quote.lines.length === 0 && quote.redeems.length === 0) {
     return (
@@ -44,7 +61,7 @@ export function Cart() {
           <ArrowRight className="size-4" />
         </Link>
       </div>
-    )
+    );
   }
 
   return (
@@ -54,14 +71,18 @@ export function Cart() {
         <div className="flex items-end justify-between gap-3">
           <h1 className="text-2xl leading-none">Tu pedido</h1>
           <span className="text-xs text-muted-foreground">
-            {quote.lines.length} {quote.lines.length === 1 ? "producto" : "productos"} ·{" "}
+            {quote.lines.length}{" "}
+            {quote.lines.length === 1 ? "producto" : "productos"} ·{" "}
             {quote.itemCount} {quote.itemCount === 1 ? "ítem" : "ítems"}
           </span>
         </div>
       </div>
 
       {/* Oportunidades de bonificación ("te faltan N unidades y te llevás X gratis") */}
-      <CartNudges bonusHints={quote.hints} onAdd={(productId, units) => add(productId, units, "unidad")} />
+      <CartNudges
+        bonusHints={quote.hints}
+        onAdd={(productId, units) => add(productId, units, "unidad")}
+      />
 
       {/* Líneas */}
       <div className="flex flex-col gap-3">
@@ -86,9 +107,12 @@ export function Cart() {
                 <Gift className="size-3" strokeWidth={2.5} />
                 Bonificación por tu pedido
               </span>
-              <span className="truncate text-sm font-semibold">{b.product.name}</span>
+              <span className="truncate text-sm font-semibold">
+                {b.product.name}
+              </span>
               <span className="text-[11px] text-muted-foreground">
-                {b.quantity} {b.quantity === 1 ? "unidad" : "unidades"} · por llevar {b.triggeredBy.name}
+                {b.quantity} {b.quantity === 1 ? "unidad" : "unidades"} · por
+                llevar {b.triggeredBy.name}
               </span>
             </div>
             <span className="cn-font-heading text-sm text-success">Gratis</span>
@@ -107,7 +131,10 @@ export function Cart() {
         <div className="flex items-end justify-between">
           <div className="flex flex-col">
             <h2 className="flex items-center gap-1.5 text-base">
-              <Coins className="size-4 text-money-foreground" strokeWidth={2.5} />
+              <Coins
+                className="size-4 text-money-foreground"
+                strokeWidth={2.5}
+              />
               Canjes con puntos
             </h2>
             <span className="text-xs text-muted-foreground">
@@ -116,7 +143,10 @@ export function Cart() {
                 : `Tenés ${formatPts(balance)} para canjear productos`}
             </span>
           </div>
-          <Link to="/puntos/canjear" className="text-xs font-semibold text-money-foreground hover:underline">
+          <Link
+            to="/puntos/canjear"
+            className="text-xs font-semibold text-money-foreground hover:underline"
+          >
             {quote.redeems.length > 0 ? "Agregar más" : "Ver canjeables"}
           </Link>
         </div>
@@ -130,9 +160,13 @@ export function Cart() {
         ))}
         {pointsMissing > 0 && (
           <div className="flex items-center gap-3 rounded-2xl bg-accent/10 p-3 text-[13px] ring-1 ring-accent/30">
-            <AlertTriangle className="size-4 shrink-0 text-accent" strokeWidth={2.25} />
+            <AlertTriangle
+              className="size-4 shrink-0 text-accent"
+              strokeWidth={2.25}
+            />
             <span>
-              Te faltan <strong>{formatPts(pointsMissing)}</strong> para estos canjes. Quitá alguno o seguí sumando puntos.
+              Te faltan <strong>{formatPts(pointsMissing)}</strong> para estos
+              canjes. Quitá alguno o seguí sumando puntos.
             </span>
           </div>
         )}
@@ -140,7 +174,10 @@ export function Cart() {
 
       <QuoteSummary quote={quote} pointsEarned={pointsEarned} />
 
-      <Link to="/catalogo" className="text-center text-xs font-semibold text-primary">
+      <Link
+        to="/catalogo"
+        className="text-center text-xs font-semibold text-primary"
+      >
         Seguir comprando
       </Link>
 
@@ -157,26 +194,35 @@ export function Cart() {
             <ArrowRight className="size-4" strokeWidth={2.5} />
           </span>
           <span className="tabular-nums">
-            {quote.net > 0 ? formatBs(quote.net) : `${formatPts(quote.pointsCost)}`}
-            {quote.net > 0 && quote.pointsCost > 0 && ` + ${formatPts(quote.pointsCost)}`}
+            {quote.net > 0
+              ? formatBs(quote.net)
+              : `${formatPts(quote.pointsCost)}`}
+            {quote.net > 0 &&
+              quote.pointsCost > 0 &&
+              ` + ${formatPts(quote.pointsCost)}`}
           </span>
         </button>
       </div>
     </div>
-  )
+  );
 }
 
 interface CartLineCardProps {
-  line: QuoteLine
-  onQuantity: (q: number) => void
-  onUnit: (u: "unidad" | "caja") => void
-  onRemove: () => void
+  line: QuoteLine;
+  onQuantity: (q: number) => void;
+  onUnit: (u: "unidad" | "caja") => void;
+  onRemove: () => void;
 }
 
-function CartLineCard({ line, onQuantity, onUnit, onRemove }: CartLineCardProps) {
-  const { product, unit, quantity } = line
-  const pack = parsePackaging(product.packaging)
-  const hasBulk = (pack?.units ?? 1) > 1
+function CartLineCard({
+  line,
+  onQuantity,
+  onUnit,
+  onRemove,
+}: CartLineCardProps) {
+  const { product, unit, quantity } = line;
+  const pack = parsePackaging(product.packaging);
+  const hasBulk = (pack?.units ?? 1) > 1;
   return (
     <article className="flex gap-3 rounded-3xl bg-card p-3 ring-1 ring-foreground/5">
       <Link to={`/producto/${product.id}`}>
@@ -190,19 +236,18 @@ function CartLineCard({ line, onQuantity, onUnit, onRemove }: CartLineCardProps)
                 {product.brand}
               </span>
             )}
-            <Link to={`/producto/${product.id}`} className="truncate text-[13px] leading-snug font-semibold">
+            <Link
+              to={`/producto/${product.id}`}
+              className="truncate text-[13px] leading-snug font-semibold"
+            >
               {product.name}
             </Link>
             <span className="text-[11px] text-muted-foreground">
-              {product.size} · {formatBs(line.itemPrice)} c/{unit === "caja" ? (pack?.container.toLowerCase() ?? "caja") : "u"}
+              {product.size} · {formatBs(line.itemPrice)} c/
+              {unit === "caja"
+                ? (pack?.container.toLowerCase() ?? "caja")
+                : "u"}
             </span>
-            {strategiesFor(product)[0] && (
-              // El premio es del OBJETIVO, no de la línea: acá solo se marca que aporta a uno.
-              <span className="mt-0.5 inline-flex w-fit items-center gap-1 rounded-full bg-money/15 px-1.5 py-0.5 text-[10px] font-bold text-money-foreground">
-                <Target className="size-2.5" strokeWidth={2.5} />
-                Suma a {strategiesFor(product)[0]!.name}
-              </span>
-            )}
           </div>
           <button
             type="button"
@@ -216,7 +261,10 @@ function CartLineCard({ line, onQuantity, onUnit, onRemove }: CartLineCardProps)
 
         {hasBulk && pack && (
           <div className="flex w-fit rounded-full bg-muted p-0.5 text-[11px] font-semibold">
-            <UnitPill active={unit === "unidad"} onClick={() => onUnit("unidad")}>
+            <UnitPill
+              active={unit === "unidad"}
+              onClick={() => onUnit("unidad")}
+            >
               Unidad
             </UnitPill>
             <UnitPill active={unit === "caja"} onClick={() => onUnit("caja")}>
@@ -239,7 +287,9 @@ function CartLineCard({ line, onQuantity, onUnit, onRemove }: CartLineCardProps)
                 <Trash2 className="size-3.5" strokeWidth={2.25} />
               )}
             </button>
-            <span className="w-7 text-center text-xs font-bold tabular-nums">{quantity}</span>
+            <span className="w-7 text-center text-xs font-bold tabular-nums">
+              {quantity}
+            </span>
             <button
               type="button"
               aria-label="Agregar uno"
@@ -250,16 +300,26 @@ function CartLineCard({ line, onQuantity, onUnit, onRemove }: CartLineCardProps)
             </button>
           </div>
           <div className="flex flex-col items-end leading-none">
-            <span className="cn-font-heading text-[15px] tabular-nums">{formatBs(line.net)}</span>
+            <span className="cn-font-heading text-[15px] tabular-nums">
+              {formatBs(line.net)}
+            </span>
           </div>
         </div>
       </div>
     </article>
-  )
+  );
 }
 
-function RedeemLineCard({ line, onQuantity, onRemove }: { line: RedeemLine; onQuantity: (q: number) => void; onRemove: () => void }) {
-  const { product, quantity } = line
+function RedeemLineCard({
+  line,
+  onQuantity,
+  onRemove,
+}: {
+  line: RedeemLine;
+  onQuantity: (q: number) => void;
+  onRemove: () => void;
+}) {
+  const { product, quantity } = line;
   return (
     <article className="flex gap-3 rounded-3xl bg-money/10 p-3 ring-2 ring-money/40">
       <Link to={`/producto/${product.id}`}>
@@ -272,11 +332,15 @@ function RedeemLineCard({ line, onQuantity, onRemove }: { line: RedeemLine; onQu
               <Coins className="size-3" strokeWidth={2.5} />
               Canje Venado Money
             </span>
-            <Link to={`/producto/${product.id}`} className="truncate text-[13px] leading-snug font-semibold">
+            <Link
+              to={`/producto/${product.id}`}
+              className="truncate text-[13px] leading-snug font-semibold"
+            >
               {product.name}
             </Link>
             <span className="text-[11px] text-muted-foreground">
-              {product.size} · {formatPts(line.pointsEach)} c/u · sin costo en Bs
+              {product.size} · {formatPts(line.pointsEach)} c/u · sin costo en
+              Bs
             </span>
           </div>
           <button
@@ -296,9 +360,15 @@ function RedeemLineCard({ line, onQuantity, onRemove }: { line: RedeemLine; onQu
               onClick={() => onQuantity(quantity - 1)}
               className="flex size-7 cursor-pointer items-center justify-center rounded-full transition-colors hover:bg-card/15 active:scale-90"
             >
-              {quantity > 1 ? <Minus className="size-3.5" strokeWidth={2.75} /> : <Trash2 className="size-3.5" strokeWidth={2.25} />}
+              {quantity > 1 ? (
+                <Minus className="size-3.5" strokeWidth={2.75} />
+              ) : (
+                <Trash2 className="size-3.5" strokeWidth={2.25} />
+              )}
             </button>
-            <span className="w-7 text-center text-xs font-bold tabular-nums">{quantity}</span>
+            <span className="w-7 text-center text-xs font-bold tabular-nums">
+              {quantity}
+            </span>
             <button
               type="button"
               aria-label="Agregar uno"
@@ -308,11 +378,13 @@ function RedeemLineCard({ line, onQuantity, onRemove }: { line: RedeemLine; onQu
               <Plus className="size-3.5" strokeWidth={2.75} />
             </button>
           </div>
-          <span className="cn-font-heading text-[15px] text-money-foreground tabular-nums">−{formatPts(line.pointsTotal)}</span>
+          <span className="cn-font-heading text-[15px] text-money-foreground tabular-nums">
+            −{formatPts(line.pointsTotal)}
+          </span>
         </div>
       </div>
     </article>
-  )
+  );
 }
 
 function UnitPill({
@@ -320,9 +392,9 @@ function UnitPill({
   onClick,
   children,
 }: {
-  active: boolean
-  onClick: () => void
-  children: React.ReactNode
+  active: boolean;
+  onClick: () => void;
+  children: React.ReactNode;
 }) {
   return (
     <button
@@ -331,10 +403,12 @@ function UnitPill({
       onClick={onClick}
       className={cn(
         "cursor-pointer rounded-full px-2.5 py-1 transition-all",
-        active ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+        active
+          ? "bg-card text-foreground shadow-sm"
+          : "text-muted-foreground hover:text-foreground",
       )}
     >
       {children}
     </button>
-  )
+  );
 }
