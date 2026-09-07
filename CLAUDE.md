@@ -107,8 +107,10 @@ existen en el catálogo fuente. En el sistema real (`sale.products`, ver abajo),
 tampoco son campo fijo del producto: Sales los resuelve en vivo por cliente vía `getPriceRules` cada
 vez que se abre el carrito. No agregar esos campos a `Product` con datos inventados.
 
-**`src/data/mockPricing.ts`**: precio y descuento **simulados**, determinísticos (mismo producto →
-mismo precio en cada render, seed = id del producto) por banda de Bs según categoría — solo para que
+**`src/data/mockPricing.ts`**: precio **simulado**, determinístico y **derivado del tamaño del
+producto** (`precio = base + tarifa × factor(cantidad)`, con base/tarifa calibradas por subcategoría a
+precios de mercado boliviano y un factor sublineal, así el formato grande cuesta más en total y menos
+por litro/kilo). Sin ruido aleatorio: dos sabores del mismo tamaño valen lo mismo. Solo para que
 las pantallas de demo tengan algo que mostrar. Documentado como simulado en el propio archivo, separado
 a propósito de `products.ts`. Si algún día hay integración real, esto se reemplaza por la respuesta de
 pricing, no se mezcla con el catálogo.
@@ -361,6 +363,83 @@ Dos layouts en `src/components/chrome/`:
   scope `product` sigue soportado en el modelo porque el servicio real puede mandar listas explícitas.
   Como los grupos se pisan (una marca cae dentro de una categoría), el mix de "Para vos" descarta
   repetidos **por nombre**, no solo por id: si no, salía el mismo lavavajillas en dos tamaños.
+- ✅ **Recomendados dentro del carrito — "Sumá a tu pedido" (2026-09-04)**. Pedido del usuario:
+  mostrar los recomendados del cliente también durante el carrito. Decisiones preguntadas y
+  elegidas: (1) **solo en el carrito con productos** (no en el carrito vacío, ni en Entrega, ni en
+  el Detalle); (2) **misma fuente que el Home** — los grupos del microservicio de estrategias,
+  descartando lo que ya está en el pedido, en vez de inventar en el front una lógica de "quien llevó
+  X también llevó Y" que hoy no existe en ningún servicio; (3) **card chica con "+" que agrega 1
+  unidad sin salir del carrito**. Implementación: `recommendedForCart(inCartIds, limit)` en
+  `data/recommendations.ts` (el round-robin de `recommendedForYou` se factorizó en `mixGroups`, que
+  ahora acepta ids/nombres a saltear) + `components/checkout/CartRecommendations.tsx` (rail
+  horizontal con snap, hasta 8 productos, badge "+N pts" si el producto tiene estrategia de puntos).
+  Va entre las líneas del pedido y "Canjes con puntos". **La lista se congela al montar**
+  (`useState` con inicializador): si se recalculara con cada cambio del carrito, el producto recién
+  agregado desaparecería del rail bajo el dedo del cliente y no podría subir la cantidad — al
+  agregar, la card pasa a stepper azul como `ProductCard`. Limitación conocida del dato: el descarte
+  de "lo que ya lleva" es por id y por **nombre** exacto, así que dos presentaciones que el catálogo
+  nombra distinto ("Vajillero Limón" vs "Vajillero Limón Bristar") pueden convivir carrito/rail.
+- ✅ **Venado Money v3 — los puntos se ganan CUMPLIENDO OBJETIVOS (2026-09-04, decisión de negocio)**.
+  Reemplaza al modelo "cada N unidades → N puntos" del 2026-09-03 (que pagaba por línea en cada
+  pedido y no acumulaba nada). El microservicio de estrategias maneja **dos tipos**: subir el
+  **ticket promedio** dentro de un alcance que el cliente ya compra (compra Bs 100 de KRIS, se busca
+  que llegue a Bs 150) y **penetración de ítems** (solo compra KRIS, se busca que empiece con
+  Pulpín: alcanza con que compre cierto monto o cantidad). En los dos casos el alcance puede ser
+  producto / marca / familia-subfamilia / categoría, y el premio se acredita **al cumplir la meta**.
+  Clave: **la meta se cumple acumulando compras** — Bs 100 en un pedido más Bs 70 en otro cumplen
+  una meta de Bs 150 — así que el progreso vive en el CLIENTE, no en el pedido.
+  **El cliente es agnóstico a la estrategia**: nunca ve "ticket promedio", "penetración" ni
+  "estrategia"; los dos tipos se presentan igual, como **objetivos** (meta + progreso + premio).
+  Decisiones preguntadas y elegidas: reemplazar el modelo viejo (no convivir), progreso acumulado
+  entre compras, objetivo **con fecha de fin y de una sola vez** (no se reinicia), y el nombre
+  "**Tus objetivos**" de cara al cliente.
+  **Modelo** (`src/data/venadoMoney.ts`): `EarnStrategy` = `{ kind: "ticket"|"penetracion"` (interno,
+  nunca se muestra)`, scope, metric: "amount"|"units", goal, points, endsAt, initialProgress }`;
+  `goalStatus()`/`goalStatuses()` devuelven `GoalStatus` (before / inCart / current / missing / pct /
+  done / completesNow / daysLeft) y son lo único que consume la UI; `earnBreakdown(quote, tier,
+  progress)` ahora paga **solo** los objetivos que el pedido completa; `applyQuoteToGoals()` avanza
+  el progreso al confirmar. Se fueron `every` y `hintWindow` (esos siguen existiendo solo en
+  `priceRules.ts`, que es otra cosa: bonificaciones). El progreso de la sesión vive en
+  `state/points.tsx` (`goals` + `advanceGoals(quote)`), sembrado con `initialProgress`; `PaymentQR`
+  acredita los puntos y llama `advanceGoals`. Los pedidos sembrados de `state/order.tsx` ahora
+  llevan su `pointsEarned` **fijo** (110/40/160, coherente con los abonos de `points.tsx`): con este
+  modelo los puntos dependen del progreso histórico, no de la cotización, y no se pueden recalcular.
+  **UI**: `components/money/GoalUI.tsx` (`GoalBar` con dos tramos — ámbar lo acumulado, verde lo que
+  aporta el carrito —, `GoalProgressText`, `GoalReward`, `GoalDeadline`, `GoalRow`, `GoalCard`),
+  pantalla `/puntos/objetivos` (`screens/money/Goals.tsx`, "En curso" + "Cumplidos"; reemplaza a
+  `/puntos/como-sumar`), sección "Tus objetivos" en `/puntos`, bloque **`CartGoals`** en el carrito
+  (rail con barra de progreso, "Te faltan Bs 39 para ganar 20 pts" o "¡Lo cumplís con este pedido!
+  +30 pts"), bloque con progreso en el Detalle, pill `Objetivo +N pts` en `ProductCard` y en las
+  cards de recomendados, y pill `Suma a {alcance}` en la línea del carrito. `CartNudges` volvió a ser
+  **solo de bonificaciones** (su fusión producto+unidades no sirve para una meta de alcance en Bs).
+  Constantes a confirmar con negocio: `GOAL_ENDING_SOON_DAYS` (15) y las metas/premios de demo.
+- ✅ **Ajustes de objetivos (2026-09-04, más tarde)**: (a) negocio confirmó que **las metas son
+  siempre en dinero** — se eliminó `GoalMetric`/`metric` y la métrica por unidades; los dos objetivos
+  demo que iban por unidades pasaron a Bs (Vajilleros Bs 300, Raptor Bs 150) y `formatGoalValue(s, v)`
+  se simplificó a `formatGoalAmount(v)`. (b) En `ProductCard` el badge de objetivo (abajo izquierda de
+  la foto) chocaba con el pill de canje "N pts" (abajo derecha) y saturaba la card: el **canje bajó al
+  pie, debajo del precio** como `o 60 pts` — es una alternativa de pago, no un atributo de la foto.
+  (c) Se escribió `eCommerce/venado-money-objetivos-y-puntos-para-sales-2026-09-04.md`: el documento
+  para el equipo de Sales/DEAL con el modelo, la propuesta de contrato (objetivos con progreso, saldo/
+  extracto, canjeables, pedido con canje, evento de confirmación), las reglas de presentación y 13
+  preguntas abiertas para negocio.
+- ✅ **Precio simulado por tamaño + "Grandes Premios" (2026-09-07, pedido del usuario)**. (a) El
+  precio mock salía de un hash por categoría, así que no respetaba la presentación: un galón de
+  mayonesa podía costar menos puntos que un pomo de 360 ml, y eso se notaba en la demo. `mockPricing.ts`
+  ahora **parsea el `size`** (acepta "360ML", "2,25 KG", "3L.", "200 Cc." y la medida embebida en el
+  nombre cuando `size` es null; corrige erratas de unidad tipo "500 L." por 500 ml) y calcula
+  `base + tarifa × factor(cantidad)` con banda por **subcategoría** y factor sublineal (a partir de
+  5 kg/L el precio por kilo baja más rápido: formatos industriales). Como el canje es 1 pt = Bs 1, el
+  costo en puntos quedó coherente solo: mayonesa pomo 360 ml = 15 pts, doypack 980 ml = 30 pts,
+  bolsa 2860 ml = 65 pts, galón 3600 ml = 80 pts. (b) **Grandes Premios** (`src/data/prizes.ts`):
+  categoría del catálogo de canje con premios **externos a la marca** (vale de compra, licuadora, TV
+  32", smartphone, refrigerador), todos de **1.000 pts para arriba** — con la misma regla 1 pt = Bs 1,
+  o sea su valor de mercado. No son productos del catálogo: no tienen SKU ni página de detalle y su
+  foto es una `imageUrl` de referencia con el ícono del premio como respaldo. Se canjean por el mismo
+  camino que un producto (`prizeAsProduct` los presenta como `Product`, así carrito, cotización y
+  pedido no cambiaron); en el filtro del catálogo de canje son una pseudo-categoría
+  (`grandes-premios`, ícono `Trophy`). En producción los administra el microservicio de puntos/premios
+  de DEAL (alta, foto, costo, vigencia, cupo).
 - ⏳ Pendiente del mapa completo: Deudas, WhatsApp entry (chat simulado), Login (pospuestos).
 
 ## Notas de entorno / herramientas (no del código)

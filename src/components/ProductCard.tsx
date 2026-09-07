@@ -1,4 +1,4 @@
-import { Coins, Minus, Plus, Trash2 } from "lucide-react"
+import { Coins, Minus, Plus, Target, Trash2 } from "lucide-react"
 import { Link } from "react-router"
 
 import { brandLogos } from "@/data/brandLogos"
@@ -66,15 +66,10 @@ export function ProductCard({ product, className }: ProductCardProps) {
         )}
 
         {earnStrategy && (
+          // Los puntos son el premio del OBJETIVO al que aporta este producto, no de la unidad.
           <span className="absolute bottom-2 left-2 inline-flex items-center gap-0.5 rounded-full bg-money-foreground px-1.5 py-0.5 text-[10px] font-bold text-card shadow-sm">
-            <Coins className="size-2.5" strokeWidth={2.5} />
-            +{earnStrategy.points} pts c/{earnStrategy.every}
-          </span>
-        )}
-        {redeemable && (
-          <span className="absolute bottom-2 right-2 inline-flex items-center gap-0.5 rounded-full bg-money px-1.5 py-0.5 text-[10px] font-bold text-money-foreground shadow-sm">
-            <Coins className="size-2.5" strokeWidth={2.5} />
-            {redeemable.points} pts
+            <Target className="size-2.5" strokeWidth={2.5} />
+            Objetivo +{earnStrategy.points} pts
           </span>
         )}
         {quantity > 0 && (
@@ -102,8 +97,15 @@ export function ProductCard({ product, className }: ProductCardProps) {
 
         <div className="mt-auto flex flex-col gap-2 pt-2">
           <div className="flex items-end justify-between gap-2">
-            <div className="flex flex-col leading-none">
+            <div className="flex flex-col gap-1 leading-none">
               <span className="cn-font-heading text-[15px]">{formatBs(price)}</span>
+              {/* El canje va acá y no sobre la foto: es una alternativa al precio, y encima del
+                  packshot chocaba con el badge de objetivo y saturaba la card. */}
+              {redeemable && (
+                <span className="inline-flex items-center gap-0.5 text-[10px] font-bold text-money-foreground">
+                  <Coins className="size-2.5" strokeWidth={2.5} />o {redeemable.points} pts
+                </span>
+              )}
             </div>
             {quantity === 0 && (
               <button

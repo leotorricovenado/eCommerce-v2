@@ -1,0 +1,24 @@
+📁 crm-deal-web/
+├── CLAUDE.md
+└── .claude/
+    └── commands/
+        ├── 🚀 GENERACIÓN UI
+        │   ├── generate-schema.md      # Esquemas Zod en features/<feature>/schemas/ + z.infer<>
+        │   ├── scaffold-ui.md          # Componentes Atómicos/Feature con Tailwind CSS y cn()
+        │   ├── generate-form.md        # Formularios con React Hook Form + @hookform/resolvers/zod
+        │   └── generate-hook.md        # Custom Hooks para TanStack Query (useQuery / useMutation)
+        │
+        ├── 🧪 CALIDAD & OPTIMIZACIÓN
+        │   ├── refactor-react-perf.md  # Detección de re-renders, useMemo/useCallback y code-splitting
+        │   └── update-docs.md          # Documentación de componentes y utilidades
+        │
+        ├── 🛡️ AUDITORÍA DE CÓDIGO
+        │   └── review-code.md          # Validación no-any, ESLint, Prettier y cero secretos
+        │
+        ├── 🩺 DIAGNÓSTICO
+        │   └── doctor.md               # Chequeo tsc, Zod Forms, tokens en memoria y Gateway-only
+        │
+        └── 🔀 CONTROL DE VERSIONES
+            ├── git-commit.md           # Conventional Commits sobre staging
+            ├── git-pr.md               # Creación de Pull Requests (Trunk-Based)
+            └── git-flow.md             # Gestión de ramas cortas (feature/fix)

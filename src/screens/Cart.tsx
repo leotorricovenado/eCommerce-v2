@@ -1,7 +1,9 @@
-import { AlertTriangle, ArrowRight, Coins, Gift, Minus, Plus, ShoppingCart, Trash2 } from "lucide-react"
+import { AlertTriangle, ArrowRight, Coins, Gift, Minus, Plus, ShoppingCart, Target, Trash2 } from "lucide-react"
 import { Link, useNavigate } from "react-router"
 
+import { CartGoals } from "@/components/checkout/CartGoals"
 import { CartNudges } from "@/components/checkout/CartNudges"
+import { CartRecommendations } from "@/components/checkout/CartRecommendations"
 import { CheckoutSteps } from "@/components/checkout/CheckoutSteps"
 import { ProductThumb } from "@/components/checkout/OrderLines"
 import { QuoteSummary } from "@/components/checkout/QuoteSummary"
@@ -16,8 +18,8 @@ import { useCart } from "@/state/cart"
 export function Cart() {
   const navigate = useNavigate()
   const { quote, add, setQuantity, setUnit, remove, setRedeemQuantity, removeRedeem } = useCart()
-  const { balance, tier } = usePoints()
-  const earn = earnBreakdown(quote, tier)
+  const { balance, tier, goals } = usePoints()
+  const earn = earnBreakdown(quote, tier, goals)
   const pointsEarned = earn.total
   const pointsMissing = Math.max(0, quote.pointsCost - balance)
   const canContinue = pointsMissing === 0
@@ -58,12 +60,8 @@ export function Cart() {
         </div>
       </div>
 
-      {/* Oportunidades: bonificaciones + puntos, consolidadas */}
-      <CartNudges
-        bonusHints={quote.hints}
-        earnHints={earn.hints}
-        onAdd={(productId, units) => add(productId, units, "unidad")}
-      />
+      {/* Oportunidades de bonificación ("te faltan N unidades y te llevás X gratis") */}
+      <CartNudges bonusHints={quote.hints} onAdd={(productId, units) => add(productId, units, "unidad")} />
 
       {/* Líneas */}
       <div className="flex flex-col gap-3">
@@ -97,6 +95,12 @@ export function Cart() {
           </div>
         ))}
       </div>
+
+      {/* Objetivos de Venado Money: qué cumple este pedido y cuánto falta para el resto */}
+      <CartGoals />
+
+      {/* Recomendados del cliente (estrategias de DEAL), sin lo que ya lleva */}
+      <CartRecommendations />
 
       {/* Canjes con puntos (Venado Money) */}
       <section className="flex flex-col gap-3">
@@ -193,9 +197,10 @@ function CartLineCard({ line, onQuantity, onUnit, onRemove }: CartLineCardProps)
               {product.size} · {formatBs(line.itemPrice)} c/{unit === "caja" ? (pack?.container.toLowerCase() ?? "caja") : "u"}
             </span>
             {strategiesFor(product)[0] && (
+              // El premio es del OBJETIVO, no de la línea: acá solo se marca que aporta a uno.
               <span className="mt-0.5 inline-flex w-fit items-center gap-1 rounded-full bg-money/15 px-1.5 py-0.5 text-[10px] font-bold text-money-foreground">
-                <Coins className="size-2.5" strokeWidth={2.5} />
-                +{strategiesFor(product)[0]!.points} pts cada {strategiesFor(product)[0]!.every}
+                <Target className="size-2.5" strokeWidth={2.5} />
+                Suma a {strategiesFor(product)[0]!.name}
               </span>
             )}
           </div>

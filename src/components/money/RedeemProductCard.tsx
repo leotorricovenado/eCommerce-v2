@@ -1,4 +1,5 @@
 import { Check, Coins, Minus, Plus, Trash2 } from "lucide-react"
+import { useState, type ReactNode } from "react"
 import { Link } from "react-router"
 
 import { productImage } from "@/data/productImages"
@@ -16,13 +17,19 @@ interface RedeemProductCardProps {
 /**
  * Card de canje: foto, costo en puntos y botón "Canjear" que agrega el producto al carrito como
  * canje (sección "Canjes con puntos"). Si el saldo no alcanza, muestra cuántos faltan.
+ *
+ * Sirve para las dos cosas que se canjean: productos de la marca (con foto del catálogo y página
+ * de detalle) y Grandes Premios (`item.prize`), que son externos a la marca — no tienen página de
+ * producto y su foto es la de referencia del proveedor, con el ícono del premio como respaldo.
  */
 export function RedeemProductCard({ item, className }: RedeemProductCardProps) {
-  const { product, points } = item
+  const { product, points, prize } = item
   const { addRedeem, setRedeemQuantity, removeRedeem, getRedeem, quote } = useCart()
   const { balance } = usePoints()
   const quantity = getRedeem(product.id)?.quantity ?? 0
-  const photo = productImage(product)
+  const [photoFailed, setPhotoFailed] = useState(false)
+  const photo = prize ? (photoFailed ? undefined : prize.imageUrl) : productImage(product)
+  const PrizeIcon = prize?.icon
   // Puntos disponibles después de lo que ya está en el carrito (sin contar esta línea).
   const committed = quote.pointsCost - quantity * points
   const available = balance - committed
@@ -37,14 +44,22 @@ export function RedeemProductCard({ item, className }: RedeemProductCardProps) {
         className
       )}
     >
-      <Link to={`/producto/${product.id}`} className="relative block aspect-square overflow-hidden bg-card">
-        {photo && (
+      <Frame to={prize ? undefined : `/producto/${product.id}`} className="relative block aspect-square overflow-hidden bg-card">
+        {photo ? (
           <img
             src={photo}
             alt={product.name}
             loading="lazy"
+            referrerPolicy="no-referrer"
+            onError={() => setPhotoFailed(true)}
             className="absolute inset-0 size-full object-contain p-3 drop-shadow-md transition-transform duration-300 group-hover:scale-105"
           />
+        ) : (
+          PrizeIcon && (
+            <span className="absolute inset-0 flex items-center justify-center bg-money/10 text-money-foreground">
+              <PrizeIcon className="size-14" strokeWidth={1.25} />
+            </span>
+          )
         )}
         <span className="absolute top-2 left-2 inline-flex items-center gap-1 rounded-full bg-money px-2 py-0.5 text-[11px] font-bold text-money-foreground shadow-sm">
           <Coins className="size-3" strokeWidth={2.5} />
@@ -55,15 +70,17 @@ export function RedeemProductCard({ item, className }: RedeemProductCardProps) {
             {quantity}
           </span>
         )}
-      </Link>
+      </Frame>
 
       <div className="flex flex-1 flex-col gap-0.5 p-3 pt-2.5">
-        {product.brand && (
-          <span className="text-[10px] font-bold tracking-wider text-primary uppercase">{product.brand}</span>
+        {prize ? (
+          <span className="text-[10px] font-bold tracking-wider text-money-foreground uppercase">Gran Premio</span>
+        ) : (
+          product.brand && <span className="text-[10px] font-bold tracking-wider text-primary uppercase">{product.brand}</span>
         )}
-        <Link to={`/producto/${product.id}`} className="line-clamp-2 text-[13px] leading-snug font-semibold">
+        <Frame to={prize ? undefined : `/producto/${product.id}`} className="line-clamp-2 text-[13px] leading-snug font-semibold">
           {product.name}
-        </Link>
+        </Frame>
         <span className="text-[11px] text-muted-foreground">{product.size}</span>
 
         <div className="mt-auto pt-2">
@@ -116,5 +133,15 @@ export function RedeemProductCard({ item, className }: RedeemProductCardProps) {
         </div>
       </div>
     </article>
+  )
+}
+
+/** Envoltorio que linkea al producto cuando existe (los Grandes Premios no tienen página). */
+function Frame({ to, className, children }: { to?: string; className?: string; children: ReactNode }) {
+  if (!to) return <span className={className}>{children}</span>
+  return (
+    <Link to={to} className={className}>
+      {children}
+    </Link>
   )
 }

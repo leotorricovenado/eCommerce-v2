@@ -38,7 +38,7 @@ export function PaymentQR() {
   const { deliveryPointId, deliveryDate } = useCheckout()
   const { placeOrder } = useOrders()
   const { phone } = useSession()
-  const { tier, earn, redeem } = usePoints()
+  const { tier, earn, redeem, goals, advanceGoals } = usePoints()
   const [phase, setPhase] = useState<Phase>("waiting")
   const { label, expired } = useCountdown(RESERVATION_SECONDS, phase === "waiting")
   const quoteRef = useRef(quote)
@@ -46,7 +46,7 @@ export function PaymentQR() {
   const empty = quote.lines.length === 0 && quote.redeems.length === 0
   // Pedido 100 % con puntos: no hay nada que cobrar, se confirma directo (sin QR ni banco).
   const onlyPoints = !empty && quote.net === 0 && quote.pointsCost > 0
-  const pointsEarned = pointsForQuote(quote, tier)
+  const pointsEarned = pointsForQuote(quote, tier, goals)
 
   useEffect(() => {
     if (empty && phase === "waiting") navigate("/carrito", { replace: true })
@@ -72,12 +72,14 @@ export function PaymentQR() {
         quote: q,
         deliveryPointId,
         deliveryDate,
-        pointsEarned: pointsForQuote(q, tier),
+        pointsEarned: pointsForQuote(q, tier, goals),
         pointsUsed: q.pointsCost,
       })
-      // Venado Money: se acreditan los puntos ganados y se debitan los canjeados al confirmar.
+      // Venado Money: se acreditan los puntos de los objetivos cumplidos, se debitan los canjes
+      // y el pedido queda sumado al progreso de los objetivos que todavía están en curso.
       earn(order.pointsEarned, order.id)
       redeem(order.pointsUsed, order.id)
+      advanceGoals(q)
       // Atajo de demo heredado de la v1: el bot le manda al cliente el WhatsApp de confirmación.
       if (phone) void notifyOrderConfirmed({ phone, orderNumber: String(order.id), total: order.quote.net })
       setPhase("confirmed")
@@ -85,7 +87,7 @@ export function PaymentQR() {
       navigate(`/pedido/${order.id}`, { replace: true })
     }, SIMULATED_CONFIRM_MS)
     return () => window.clearTimeout(t)
-  }, [phase, placeOrder, deliveryPointId, deliveryDate, clear, navigate, phone, tier, earn, redeem])
+  }, [phase, placeOrder, deliveryPointId, deliveryDate, clear, navigate, phone, tier, earn, redeem, goals, advanceGoals])
 
   const phaseIndex = PHASES.findIndex((p) => p.key === phase)
   const seed = `${quote.net}-${deliveryPointId}-${deliveryDate.toDateString()}`

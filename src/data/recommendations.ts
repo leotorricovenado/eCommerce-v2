@@ -1,4 +1,4 @@
-// RECOMENDACIONES DEL HOME — SIMULADO.
+// RECOMENDACIONES (Home y carrito) — SIMULADO.
 //
 // En producción esta lista la arma el **microservicio de estrategias de DEAL** (el mismo que
 // define cómo se ganan puntos, ver venadoMoney.ts): al eCommerce le llega, por cliente, un
@@ -86,26 +86,51 @@ export function productsForGroup(group: RecommendationGroup, limit = RECOMMENDED
 }
 
 /**
- * "Para vos": mezcla de todos los grupos, tomando de a uno por grupo (round-robin) para que se
- * vean varias marcas y categorías a la vez, que es justo lo que manda el servicio de estrategias.
- * Los grupos se pisan entre sí (una marca cae dentro de una categoría), así que además de por id
- * se descarta por NOMBRE: si no, la grilla muestra el mismo producto en dos tamaños y parece repetida.
+ * Mezcla de todos los grupos tomando de a uno por grupo (round-robin) para que se vean varias
+ * marcas y categorías a la vez, que es justo lo que manda el servicio de estrategias. Los grupos
+ * se pisan entre sí (una marca cae dentro de una categoría), así que además de por id se descarta
+ * por NOMBRE: si no, la grilla muestra el mismo producto en dos tamaños y parece repetida.
  */
-export function recommendedForYou(limit = RECOMMENDED_LIMIT): Product[] {
-  const pools = RECOMMENDATION_GROUPS.map((g) => productsForGroup(g, limit * 2))
+function mixGroups(limit: number, skipIds: ReadonlySet<string>, skipNames: ReadonlySet<string>): Product[] {
+  // El pool se agranda con lo que hay que saltear para que igual queden `limit` productos.
+  const depth = limit * 2 + skipIds.size
+  const pools = RECOMMENDATION_GROUPS.map((g) => productsForGroup(g, depth))
   const picked: Product[] = []
-  const seenNames = new Set<string>()
+  const seenNames = new Set(skipNames)
   const rounds = Math.max(...pools.map((p) => p.length), 0)
   for (let round = 0; picked.length < limit && round < rounds; round++) {
     for (const pool of pools) {
       const p = pool[round]
-      if (!p || seenNames.has(p.name)) continue
+      if (!p || skipIds.has(p.id) || seenNames.has(p.name)) continue
       seenNames.add(p.name)
       picked.push(p)
       if (picked.length === limit) break
     }
   }
   return picked
+}
+
+/** "Para vos" del Home: mezcla de todos los grupos recomendados para el cliente. */
+export function recommendedForYou(limit = RECOMMENDED_LIMIT): Product[] {
+  return mixGroups(limit, new Set(), new Set())
+}
+
+/** Cuántos productos entran en el rail del carrito (rail horizontal, no grilla). */
+export const CART_RECOMMENDED_LIMIT = 8
+
+/**
+ * Recomendados para mostrar DENTRO del carrito (decisión del usuario, 2026-09-04): son los mismos
+ * grupos que manda el microservicio de estrategias para ese cliente — no una lógica de "quien
+ * llevó X también llevó Y" inventada en el front — descartando lo que ya está en el pedido.
+ * Se saltea también por nombre: si ya lleva la presentación de 500 ml, ofrecerle la de 1 L como
+ * "recomendado" parece un bug, no una sugerencia.
+ */
+export function recommendedForCart(inCartIds: readonly string[], limit = CART_RECOMMENDED_LIMIT): Product[] {
+  const byId = new Map(products.map((p) => [p.id, p]))
+  const names = new Set(
+    inCartIds.map((id) => byId.get(id)?.name).filter((n): n is string => Boolean(n))
+  )
+  return mixGroups(limit, new Set(inCartIds), names)
 }
 
 /** A dónde lleva "Ver todo" con este grupo activo. */

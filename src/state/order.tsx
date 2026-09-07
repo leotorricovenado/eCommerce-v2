@@ -1,7 +1,6 @@
 import { createContext, useContext, useState, type ReactNode } from "react"
 
 import { quoteCart, type Quote } from "@/data/priceRules"
-import { TIERS, pointsForQuote } from "@/data/venadoMoney"
 
 /**
  * Pasos del canal de autogestión (kickoff DEAL, diapositiva 6 — flujo PREPAGO): el pago va
@@ -68,6 +67,10 @@ function seedOrders(now: Date): Order[] {
     daysAgo: number,
     status: OrderStepKey,
     deliveryPointId: number,
+    // Puntos que dejó el pedido. Van fijos y coinciden con los abonos sembrados en
+    // `state/points.tsx`: con el modelo de objetivos los puntos dependen del progreso histórico
+    // del cliente, no de la cotización, así que no se pueden recalcular acá.
+    pointsEarned: number,
     lines: Parameters<typeof quoteCart>[0]
   ): Order => {
     const createdAt = new Date(now.getTime() - daysAgo * DAY)
@@ -93,7 +96,7 @@ function seedOrders(now: Date): Order[] {
       id,
       createdAt,
       quote,
-      pointsEarned: pointsForQuote(quote, TIERS[0]!),
+      pointsEarned,
       pointsUsed: 0,
       deliveryPointId,
       deliveryDate,
@@ -103,16 +106,16 @@ function seedOrders(now: Date): Order[] {
     }
   }
   return [
-    build(48212, 1, "in_route", 501, [
+    build(48212, 1, "in_route", 501, 110, [
       { productId: "mayonesa-doypack-300986", unit: "caja", quantity: 1 },
       { productId: "ketchup-doypack-301049", unit: "unidad", quantity: 6 },
       { productId: "refresco-frussion-naranja-600113", unit: "caja", quantity: 2 },
     ]),
-    build(48197, 9, "delivered", 502, [
+    build(48197, 9, "delivered", 502, 40, [
       { productId: "lavavajillas-limon-bristar-doypack-301278", unit: "caja", quantity: 1 },
       { productId: "gelatina-frambuesa-bolsa-300853", unit: "unidad", quantity: 10 },
     ]),
-    build(48171, 23, "delivered", 501, [
+    build(48171, 23, "delivered", 501, 160, [
       { productId: "mostaza-doypack-301053", unit: "unidad", quantity: 12 },
       { productId: "salsa-golf-pomo-300179", unit: "caja", quantity: 1 },
       { productId: "mayonesa-doypack-300986", unit: "unidad", quantity: 4 },

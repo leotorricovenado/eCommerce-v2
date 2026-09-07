@@ -4,6 +4,7 @@ import { Link, useSearchParams } from "react-router"
 import { PointsPill } from "@/components/money/PointsUI"
 import { RedeemProductCard } from "@/components/money/RedeemProductCard"
 import { categoryIcons } from "@/data/categoryIcons"
+import { PRIZE_CATEGORY_ID } from "@/data/prizes"
 import { redeemCategories, redeemables } from "@/data/venadoMoney"
 import { tintForCategory } from "@/lib/categoryTint"
 import { cn } from "@/lib/utils"
@@ -33,12 +34,13 @@ export function RedeemCatalog() {
             <Coins className="size-3.5" strokeWidth={2.5} />
             Venado Money
           </span>
-          <h1 className="text-2xl leading-none">Canjeá productos</h1>
+          <h1 className="text-2xl leading-none">Canjeá tus puntos</h1>
         </div>
         <PointsPill points={remaining} size="md" />
       </div>
       <p className="text-xs text-muted-foreground">
-        Los canjes se agregan a tu carrito y viajan con tu próximo pedido, sin costo en Bs.
+        Los canjes se agregan a tu carrito y viajan con tu próximo pedido, sin costo en Bs. En
+        Grandes Premios están los canjes grandes: electrodomésticos, tecnología y vales.
         {quote.pointsCost > 0 && ` Ya tenés ${quote.pointsCost.toLocaleString("es-BO")} pts en canjes.`}
       </p>
 
@@ -50,7 +52,7 @@ export function RedeemCatalog() {
             active={categoryId === c.id}
             label={c.label}
             icon={categoryIcons[c.id]!}
-            tint={tintForCategory(c.id)}
+            tint={c.id === PRIZE_CATEGORY_ID ? "bg-money/20 text-money-foreground" : tintForCategory(c.id)}
             onClick={() => select(categoryId === c.id ? null : c.id)}
           />
         ))}

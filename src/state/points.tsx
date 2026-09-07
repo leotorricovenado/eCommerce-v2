@@ -1,6 +1,15 @@
 import { createContext, useContext, useMemo, useState, type ReactNode } from "react"
 
-import { expiryFor, progressToNext, tierFor, type Tier } from "@/data/venadoMoney"
+import {
+  applyQuoteToGoals,
+  expiryFor,
+  initialGoalProgress,
+  progressToNext,
+  tierFor,
+  type GoalProgressMap,
+  type Tier,
+} from "@/data/venadoMoney"
+import type { Quote } from "@/data/priceRules"
 
 export type MovementKind = "abono" | "debito"
 
@@ -37,6 +46,13 @@ interface PointsContextValue {
   nextExpiry: PointsLot | null
   earn: (points: number, orderId: number) => void
   redeem: (points: number, orderId: number) => void
+  /**
+   * Progreso acumulado de los objetivos (ver `data/venadoMoney.ts`). Vive acá, en el cliente, y no
+   * en el pedido: una meta se cumple sumando compras sucesivas.
+   */
+  goals: GoalProgressMap
+  /** Suma al progreso lo que aportó un pedido confirmado. */
+  advanceGoals: (quote: Pick<Quote, "lines">) => void
 }
 
 const PointsContext = createContext<PointsContextValue | null>(null)
@@ -46,7 +62,8 @@ const DAY = 24 * 60 * 60 * 1000
 /**
  * Movimientos de DEMO, coherentes con los pedidos sembrados en `state/order.tsx` (48171, 48197,
  * 48212) más historial anterior, para que el saldo y el progreso de nivel tengan sentido:
- * acumulado ≈ 760 pts (76 % hacia Plata), un canje de 240 → saldo ≈ 520.
+ * acumulado = 760 pts (76 % hacia Plata), un canje de 240 → saldo = 520. Los montos son múltiplos
+ * redondos porque ahora cada abono es el premio de uno o más OBJETIVOS cumplidos, no un % del monto.
  */
 function seedMovements(now: Date): PointsMovement[] {
   const at = (daysAgo: number) => new Date(now.getTime() - daysAgo * DAY)
@@ -59,8 +76,8 @@ function seedMovements(now: Date): PointsMovement[] {
     description: `Pedido #${orderId}`,
   })
   return [
-    abono(48212, 112, 1),
-    abono(48197, 39, 9),
+    abono(48212, 110, 1),
+    abono(48197, 40, 9),
     {
       id: "m-48185-d",
       kind: "debito",
@@ -69,10 +86,10 @@ function seedMovements(now: Date): PointsMovement[] {
       orderId: 48185,
       description: "Canje en pedido #48185",
     },
-    abono(48185, 61, 14),
-    abono(48171, 158, 23),
-    abono(48140, 204, 41),
-    abono(48098, 186, 58),
+    abono(48185, 60, 14),
+    abono(48171, 160, 23),
+    abono(48140, 200, 41),
+    abono(48098, 190, 58),
   ]
 }
 
@@ -98,6 +115,7 @@ function buildLots(movements: PointsMovement[]): PointsLot[] {
 
 export function PointsProvider({ children }: { children: ReactNode }) {
   const [movements, setMovements] = useState<PointsMovement[]>(() => seedMovements(new Date()))
+  const [goals, setGoals] = useState<GoalProgressMap>(() => initialGoalProgress())
 
   const { balance, lifetime, lots } = useMemo(() => {
     let balance = 0
@@ -130,12 +148,16 @@ export function PointsProvider({ children }: { children: ReactNode }) {
     ])
   }
 
+  const advanceGoals = (quote: Pick<Quote, "lines">) => setGoals((prev) => applyQuoteToGoals(prev, quote))
+
   const tier = tierFor(lifetime)
   const progress = progressToNext(lifetime)
   const nextExpiry = lots[0] ?? null
 
   return (
-    <PointsContext.Provider value={{ balance, lifetime, tier, progress, movements, lots, nextExpiry, earn, redeem }}>
+    <PointsContext.Provider
+      value={{ balance, lifetime, tier, progress, movements, lots, nextExpiry, earn, redeem, goals, advanceGoals }}
+    >
       {children}
     </PointsContext.Provider>
   )

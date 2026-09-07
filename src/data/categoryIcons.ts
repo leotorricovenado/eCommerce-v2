@@ -6,6 +6,7 @@ import {
   GlassWater,
   IceCreamBowl,
   SprayCan,
+  Trophy,
   Utensils,
   Wheat,
   type LucideIcon,
@@ -21,4 +22,6 @@ export const categoryIcons: Record<string, LucideIcon> = {
   culinarios: CookingPot,
   postres: IceCreamBowl,
   cereales: Wheat,
+  // Pseudo-categoría del catálogo de canje: premios externos a la marca (ver data/prizes.ts).
+  "grandes-premios": Trophy,
 }

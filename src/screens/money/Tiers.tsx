@@ -99,7 +99,7 @@ export function Tiers() {
               <Check className="mt-0.5 size-4 shrink-0 text-success" strokeWidth={3} />
               <span>
                 <strong>{t.label}:</strong> {t.benefit}
-                {t.multiplier !== 1 && ` (×${t.multiplier} sobre los puntos de cada estrategia)`}.
+                {t.multiplier !== 1 && ` (×${t.multiplier} sobre los puntos de cada objetivo)`}.
               </span>
             </li>
           ))}

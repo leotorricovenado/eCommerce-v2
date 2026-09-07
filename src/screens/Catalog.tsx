@@ -9,105 +9,125 @@ import {
   Sparkles,
   X,
   type LucideIcon,
-} from "lucide-react"
-import { useMemo, useState } from "react"
-import { useSearchParams } from "react-router"
+} from "lucide-react";
+import { useMemo, useState } from "react";
+import { useSearchParams } from "react-router";
 
-import { ProductCard } from "@/components/ProductCard"
+import { ProductCard } from "@/components/ProductCard";
 import {
   Sheet,
   SheetContent,
   SheetDescription,
   SheetHeader,
   SheetTitle,
-} from "@/components/ui/sheet"
-import { brandFamily } from "@/data/brandFamily"
-import { brandLogos } from "@/data/brandLogos"
-import { brands as allBrands, categories } from "@/data/categories"
-import { categoryIcons } from "@/data/categoryIcons"
-import { mockPrice } from "@/data/mockPricing"
-import { hasProductImage, productImage } from "@/data/productImages"
-import { products, type Product } from "@/data/products"
-import { tintForCategory } from "@/lib/categoryTint"
-import { matchesQuery } from "@/lib/search"
-import { useMediaQuery } from "@/lib/useMediaQuery"
-import { cn } from "@/lib/utils"
+} from "@/components/ui/sheet";
+import { brandFamily } from "@/data/brandFamily";
+import { brandLogos } from "@/data/brandLogos";
+import { brands as allBrands, categories } from "@/data/categories";
+import { categoryIcons } from "@/data/categoryIcons";
+import { mockPrice } from "@/data/mockPricing";
+import { hasProductImage, productImage } from "@/data/productImages";
+import { products, type Product } from "@/data/products";
+import { tintForCategory } from "@/lib/categoryTint";
+import { matchesQuery } from "@/lib/search";
+import { useMediaQuery } from "@/lib/useMediaQuery";
+import { cn } from "@/lib/utils";
 
-const PAGE_SIZE = 24
+const PAGE_SIZE = 24;
 
-type SortKey = "relevancia" | "precio-asc" | "precio-desc" | "nombre"
+type SortKey = "relevancia" | "precio-asc" | "precio-desc" | "nombre";
 
 const SORTS: { key: SortKey; label: string; icon: LucideIcon }[] = [
   { key: "relevancia", label: "Relevancia", icon: Sparkles },
-  { key: "precio-asc", label: "Precio: menor a mayor", icon: ArrowUpNarrowWide },
-  { key: "precio-desc", label: "Precio: mayor a menor", icon: ArrowDownWideNarrow },
+  {
+    key: "precio-asc",
+    label: "Precio: menor a mayor",
+    icon: ArrowUpNarrowWide,
+  },
+  {
+    key: "precio-desc",
+    label: "Precio: mayor a menor",
+    icon: ArrowDownWideNarrow,
+  },
   { key: "nombre", label: "Nombre A-Z", icon: ArrowDownAZ },
-]
+];
 
 function sortProducts(list: Product[], sort: SortKey): Product[] {
-  const copy = [...list]
+  const copy = [...list];
   switch (sort) {
     case "precio-asc":
-      return copy.sort((a, b) => mockPrice(a) - mockPrice(b))
+      return copy.sort((a, b) => mockPrice(a) - mockPrice(b));
     case "precio-desc":
-      return copy.sort((a, b) => mockPrice(b) - mockPrice(a))
+      return copy.sort((a, b) => mockPrice(b) - mockPrice(a));
     case "nombre":
-      return copy.sort((a, b) => a.name.localeCompare(b.name, "es"))
+      return copy.sort((a, b) => a.name.localeCompare(b.name, "es"));
     default:
       // Relevancia: con foto real primero, después el orden del catálogo.
-      return copy.sort((a, b) => Number(hasProductImage(b)) - Number(hasProductImage(a)))
+      return copy.sort(
+        (a, b) => Number(hasProductImage(b)) - Number(hasProductImage(a)),
+      );
   }
 }
 
 export function Catalog() {
-  const [params, setParams] = useSearchParams()
-  const categoryId = params.get("categoria") ?? ""
-  const subId = params.get("sub") ?? ""
-  const brand = params.get("marca") ?? ""
-  const query = params.get("q") ?? ""
-  const sort = (params.get("orden") as SortKey | null) ?? "relevancia"
+  const [params, setParams] = useSearchParams();
+  const categoryId = params.get("categoria") ?? "";
+  const subId = params.get("sub") ?? "";
+  const brand = params.get("marca") ?? "";
+  const query = params.get("q") ?? "";
+  const sort = (params.get("orden") as SortKey | null) ?? "relevancia";
 
-  const [sheetOpen, setSheetOpen] = useState(false)
-  const [visible, setVisible] = useState(PAGE_SIZE)
-  const isDesktop = useMediaQuery("(min-width: 640px)")
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const [visible, setVisible] = useState(PAGE_SIZE);
+  const isDesktop = useMediaQuery("(min-width: 640px)");
 
   // El buscador vive en la TopBar (sticky) y escribe `q` en la URL sin pasar por `update()`, así
   // que la paginación se reinicia acá al cambiar lo buscado (ajuste durante el render, no efecto).
-  const [pagedQuery, setPagedQuery] = useState(query)
+  const [pagedQuery, setPagedQuery] = useState(query);
   if (pagedQuery !== query) {
-    setPagedQuery(query)
-    setVisible(PAGE_SIZE)
+    setPagedQuery(query);
+    setVisible(PAGE_SIZE);
   }
 
   const update = (patch: Record<string, string | null>) => {
-    const next = new URLSearchParams(params)
+    const next = new URLSearchParams(params);
     for (const [k, v] of Object.entries(patch)) {
-      if (v === null || v === "") next.delete(k)
-      else next.set(k, v)
+      if (v === null || v === "") next.delete(k);
+      else next.set(k, v);
     }
-    setParams(next, { replace: true })
-    setVisible(PAGE_SIZE)
-  }
+    setParams(next, { replace: true });
+    setVisible(PAGE_SIZE);
+  };
 
-  const category = categories.find((c) => c.id === categoryId)
-  const subcategory = category?.subcategories.find((s) => s.id === subId)
+  const category = categories.find((c) => c.id === categoryId);
+  const subcategory = category?.subcategories.find((s) => s.id === subId);
 
   const filtered = useMemo(() => {
-    let list = products
-    if (category) list = list.filter((p) => p.categoryId === category.id)
-    if (subcategory) list = list.filter((p) => p.subcategoryId === subcategory.id)
-    if (brand) list = list.filter((p) => p.brand === brand)
-    if (query) list = list.filter((p) => matchesQuery(query, [p.name, p.brand, p.sku, p.size]))
-    return sortProducts(list, sort)
-  }, [category, subcategory, brand, query, sort])
+    let list = products;
+    if (category) list = list.filter((p) => p.categoryId === category.id);
+    if (subcategory)
+      list = list.filter((p) => p.subcategoryId === subcategory.id);
+    if (brand) list = list.filter((p) => p.brand === brand);
+    if (query)
+      list = list.filter((p) =>
+        matchesQuery(query, [p.name, p.brand, p.sku, p.size]),
+      );
+    return sortProducts(list, sort);
+  }, [category, subcategory, brand, query, sort]);
 
-  const shown = filtered.slice(0, visible)
-  const brandOptions = category ? category.brands : allBrands
-  const activeFilterCount = [brand, sort !== "relevancia" ? "1" : ""].filter(Boolean).length
+  const shown = filtered.slice(0, visible);
+  const brandOptions = category ? category.brands : allBrands;
+  const activeFilterCount = [brand, sort !== "relevancia" ? "1" : ""].filter(
+    Boolean,
+  ).length;
   const bannerPhoto = category
-    ? productImage(products.find((p) => p.categoryId === category.id && hasProductImage(p)) ?? { id: "", sku: null })
-    : undefined
-  const CategoryIcon = category ? categoryIcons[category.id] : undefined
+    ? productImage(
+        products.find(
+          (p) => p.categoryId === category.id && hasProductImage(p),
+        ) ?? { id: "", sku: null },
+      )
+    : undefined;
+  const CategoryIcon = category ? categoryIcons[category.id] : undefined;
 
   return (
     <div className="flex flex-col gap-4 px-4 pt-3 pb-8">
@@ -139,7 +159,12 @@ export function Catalog() {
             label={c.label}
             icon={categoryIcons[c.id]!}
             tint={tintForCategory(c.id)}
-            onClick={() => update({ categoria: c.id === category?.id ? null : c.id, sub: null })}
+            onClick={() =>
+              update({
+                categoria: c.id === category?.id ? null : c.id,
+                sub: null,
+              })
+            }
           />
         ))}
       </div>
@@ -149,13 +174,15 @@ export function Catalog() {
         <div
           className={cn(
             "relative flex h-24 items-center overflow-hidden rounded-3xl px-5 ring-1 ring-foreground/5",
-            tintForCategory(category.id)
+            tintForCategory(category.id),
           )}
         >
           <span className="pointer-events-none absolute -top-10 right-16 size-32 rounded-full bg-card/50" />
           <div className="relative z-10 flex max-w-[68%] items-center gap-3">
             <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-card/80 shadow-sm">
-              {CategoryIcon && <CategoryIcon className="size-5" strokeWidth={2} />}
+              {CategoryIcon && (
+                <CategoryIcon className="size-5" strokeWidth={2} />
+              )}
             </span>
             <div className="flex min-w-0 flex-col">
               <span className="cn-font-heading truncate text-lg leading-tight text-foreground">
@@ -163,7 +190,9 @@ export function Catalog() {
               </span>
               <span className="truncate text-xs text-foreground/60">
                 {category.productCount} productos ·{" "}
-                {category.brands.length > 2 ? `${category.brands.length} marcas` : category.brands.join(", ")}
+                {category.brands.length > 2
+                  ? `${category.brands.length} marcas`
+                  : category.brands.join(", ")}
               </span>
             </div>
           </div>
@@ -187,7 +216,9 @@ export function Catalog() {
             <Pill
               key={s.id}
               active={subcategory?.id === s.id}
-              onClick={() => update({ sub: s.id === subcategory?.id ? null : s.id })}
+              onClick={() =>
+                update({ sub: s.id === subcategory?.id ? null : s.id })
+              }
             >
               {s.label}
               <span className="ml-1 opacity-60">{s.productCount}</span>
@@ -203,7 +234,9 @@ export function Catalog() {
             {filtered.length} {filtered.length === 1 ? "producto" : "productos"}
           </span>
           <span className="truncate text-xs text-muted-foreground">
-            {query ? `Resultados para "${query}"` : (subcategory?.label ?? category?.label ?? "Todo el catálogo")}
+            {query
+              ? `Resultados para "${query}"`
+              : (subcategory?.label ?? category?.label ?? "Todo el catálogo")}
           </span>
         </div>
         <button
@@ -213,7 +246,7 @@ export function Catalog() {
             "flex h-10 shrink-0 cursor-pointer items-center gap-2 rounded-full px-4 text-sm font-semibold shadow-sm ring-1 transition-all active:scale-95",
             activeFilterCount > 0
               ? "bg-primary text-primary-foreground ring-primary shadow-primary/20"
-              : "bg-card ring-foreground/5 hover:ring-primary/30"
+              : "bg-card ring-foreground/5 hover:ring-primary/30",
           )}
         >
           <SlidersHorizontal className="size-4" strokeWidth={2.25} />
@@ -230,7 +263,9 @@ export function Catalog() {
       {(brand || sort !== "relevancia") && (
         <div className="no-scrollbar -mx-4 -mt-1 flex gap-2 overflow-x-auto px-4">
           {brand && (
-            <ActiveChip onRemove={() => update({ marca: null })}>Marca: {brand}</ActiveChip>
+            <ActiveChip onRemove={() => update({ marca: null })}>
+              Marca: {brand}
+            </ActiveChip>
           )}
           {sort !== "relevancia" && (
             <ActiveChip onRemove={() => update({ orden: null })}>
@@ -269,7 +304,9 @@ export function Catalog() {
             <Search className="size-6 text-muted-foreground" />
           </span>
           <div className="flex flex-col gap-1">
-            <span className="cn-font-heading text-base">No encontramos productos</span>
+            <span className="cn-font-heading text-base">
+              No encontramos productos
+            </span>
             <span className="text-sm text-muted-foreground">
               Probá con otra palabra o quitá algún filtro.
             </span>
@@ -277,7 +314,13 @@ export function Catalog() {
           <button
             type="button"
             onClick={() =>
-              update({ q: null, marca: null, orden: null, sub: null, categoria: null })
+              update({
+                q: null,
+                marca: null,
+                orden: null,
+                sub: null,
+                categoria: null,
+              })
             }
             className="h-10 cursor-pointer rounded-full bg-primary px-5 text-sm font-bold text-primary-foreground shadow-md shadow-primary/20 active:scale-95"
           >
@@ -296,7 +339,9 @@ export function Catalog() {
           <SheetHeader className="flex-row items-center justify-between px-5 pt-4 pb-2">
             <div className="flex flex-col">
               <SheetTitle>Filtros y orden</SheetTitle>
-              <SheetDescription>{filtered.length} productos coinciden</SheetDescription>
+              <SheetDescription>
+                {filtered.length} productos coinciden
+              </SheetDescription>
             </div>
             <button
               type="button"
@@ -313,24 +358,26 @@ export function Catalog() {
               <FilterLabel>Ordenar por</FilterLabel>
               <div className="flex flex-col gap-1.5">
                 {SORTS.map(({ key, label, icon: SortIcon }) => {
-                  const active = sort === key
+                  const active = sort === key;
                   return (
                     <button
                       key={key}
                       type="button"
-                      onClick={() => update({ orden: key === "relevancia" ? null : key })}
+                      onClick={() =>
+                        update({ orden: key === "relevancia" ? null : key })
+                      }
                       className={cn(
                         "flex h-11 cursor-pointer items-center gap-3 rounded-2xl px-3 text-sm font-medium ring-1 transition-all active:scale-[0.99]",
                         active
                           ? "bg-primary/5 text-primary ring-primary"
-                          : "bg-card ring-foreground/5 hover:ring-primary/30"
+                          : "bg-card ring-foreground/5 hover:ring-primary/30",
                       )}
                     >
                       <SortIcon className="size-4" strokeWidth={2} />
                       <span className="flex-1 text-left">{label}</span>
                       {active && <Check className="size-4" strokeWidth={3} />}
                     </button>
-                  )
+                  );
                 })}
               </div>
             </section>
@@ -342,7 +389,7 @@ export function Catalog() {
                   Todas
                 </Pill>
                 {brandOptions.map((b) => {
-                  const logo = brandLogos[b]
+                  const logo = brandLogos[b];
                   return (
                     <Pill
                       key={b}
@@ -350,11 +397,15 @@ export function Catalog() {
                       onClick={() => update({ marca: brand === b ? null : b })}
                     >
                       {logo && (
-                        <img src={logo} alt="" className="-ml-1.5 size-5 rounded-full object-contain" />
+                        <img
+                          src={logo}
+                          alt=""
+                          className="-ml-1.5 size-5 rounded-full object-contain"
+                        />
                       )}
                       {b}
                     </Pill>
-                  )
+                  );
                 })}
               </div>
             </section>
@@ -379,14 +430,14 @@ export function Catalog() {
         </SheetContent>
       </Sheet>
     </div>
-  )
+  );
 }
 
 interface BrandBannerProps {
-  brand: string
-  count: number
-  categoryLabels: string[]
-  onClear: () => void
+  brand: string;
+  count: number;
+  categoryLabels: string[];
+  onClear: () => void;
 }
 
 /**
@@ -394,9 +445,14 @@ interface BrandBannerProps {
  * texto con un degradé y hacia abajo hacia el fondo de la página, para que los productos de la
  * grilla parezcan salir del banner. Sin foto de familia cae a un banner con logo/monograma.
  */
-function BrandBanner({ brand, count, categoryLabels, onClear }: BrandBannerProps) {
-  const family = brandFamily[brand]
-  const logo = brandLogos[brand]
+function BrandBanner({
+  brand,
+  count,
+  categoryLabels,
+  onClear,
+}: BrandBannerProps) {
+  const family = brandFamily[brand];
+  const logo = brandLogos[brand];
   return (
     <div className="relative -mx-4 overflow-hidden bg-card sm:mx-0 sm:rounded-3xl sm:ring-1 sm:ring-foreground/5">
       <div className="relative flex h-48 items-stretch sm:h-64">
@@ -407,7 +463,12 @@ function BrandBanner({ brand, count, categoryLabels, onClear }: BrandBannerProps
             className="pointer-events-none absolute inset-y-0 right-0 h-full w-[62%] object-cover object-[center_35%] sm:w-[55%] sm:object-contain sm:object-right"
           />
         ) : (
-          <span className={cn("absolute inset-y-0 right-0 w-[50%]", tintForCategory(brand))} />
+          <span
+            className={cn(
+              "absolute inset-y-0 right-0 w-[50%]",
+              tintForCategory(brand),
+            )}
+          />
         )}
         {/* Difuminación horizontal (hacia el texto) y vertical (hacia la página) */}
         <span className="pointer-events-none absolute inset-0 bg-gradient-to-r from-card from-35% via-card/85 via-55% to-transparent to-80%" />
@@ -417,7 +478,11 @@ function BrandBanner({ brand, count, categoryLabels, onClear }: BrandBannerProps
           <div className="flex items-center gap-2.5">
             <span className="flex size-12 shrink-0 items-center justify-center rounded-full bg-card p-0.5 shadow-md ring-2 ring-background">
               {logo ? (
-                <img src={logo} alt="" className="size-full rounded-full object-contain" />
+                <img
+                  src={logo}
+                  alt=""
+                  className="size-full rounded-full object-contain"
+                />
               ) : (
                 <span className="cn-font-heading text-base">{brand[0]}</span>
               )}
@@ -429,7 +494,8 @@ function BrandBanner({ brand, count, categoryLabels, onClear }: BrandBannerProps
           <h2 className="text-2xl leading-none sm:text-3xl">{brand}</h2>
           <p className="text-xs text-muted-foreground">
             {count} {count === 1 ? "producto" : "productos"}
-            {categoryLabels.length > 0 && ` · ${categoryLabels.slice(0, 3).join(", ")}`}
+            {categoryLabels.length > 0 &&
+              ` · ${categoryLabels.slice(0, 3).join(", ")}`}
             {categoryLabels.length > 3 && ` y ${categoryLabels.length - 3} más`}
           </p>
           <button
@@ -443,18 +509,24 @@ function BrandBanner({ brand, count, categoryLabels, onClear }: BrandBannerProps
         </div>
       </div>
     </div>
-  )
+  );
 }
 
 interface CategoryChipProps {
-  active: boolean
-  label: string
-  icon: LucideIcon
-  tint: string
-  onClick: () => void
+  active: boolean;
+  label: string;
+  icon: LucideIcon;
+  tint: string;
+  onClick: () => void;
 }
 
-function CategoryChip({ active, label, icon: Icon, tint, onClick }: CategoryChipProps) {
+function CategoryChip({
+  active,
+  label,
+  icon: Icon,
+  tint,
+  onClick,
+}: CategoryChipProps) {
   return (
     <button
       type="button"
@@ -464,20 +536,20 @@ function CategoryChip({ active, label, icon: Icon, tint, onClick }: CategoryChip
         "flex shrink-0 cursor-pointer items-center gap-2 rounded-full py-1.5 pr-4 pl-1.5 text-[13px] font-semibold whitespace-nowrap shadow-sm ring-1 transition-all active:scale-95",
         active
           ? "bg-primary text-primary-foreground ring-primary shadow-primary/20"
-          : "bg-card ring-foreground/5 hover:-translate-y-0.5 hover:shadow-md"
+          : "bg-card ring-foreground/5 hover:-translate-y-0.5 hover:shadow-md",
       )}
     >
       <span
         className={cn(
           "flex size-7 items-center justify-center rounded-full",
-          active ? "bg-primary-foreground/20 text-primary-foreground" : tint
+          active ? "bg-primary-foreground/20 text-primary-foreground" : tint,
         )}
       >
         <Icon className="size-3.5" strokeWidth={2.25} />
       </span>
       {label}
     </button>
-  )
+  );
 }
 
 function Pill({
@@ -485,9 +557,9 @@ function Pill({
   onClick,
   children,
 }: {
-  active: boolean
-  onClick: () => void
-  children: React.ReactNode
+  active: boolean;
+  onClick: () => void;
+  children: React.ReactNode;
 }) {
   return (
     <button
@@ -498,15 +570,21 @@ function Pill({
         "flex h-9 shrink-0 cursor-pointer items-center gap-1.5 rounded-full px-3.5 text-xs font-semibold whitespace-nowrap ring-1 transition-all active:scale-95",
         active
           ? "bg-foreground text-background ring-foreground"
-          : "bg-card ring-foreground/10 hover:ring-primary/40"
+          : "bg-card ring-foreground/10 hover:ring-primary/40",
       )}
     >
       {children}
     </button>
-  )
+  );
 }
 
-function ActiveChip({ children, onRemove }: { children: React.ReactNode; onRemove: () => void }) {
+function ActiveChip({
+  children,
+  onRemove,
+}: {
+  children: React.ReactNode;
+  onRemove: () => void;
+}) {
   return (
     <span className="flex h-8 shrink-0 items-center gap-1.5 rounded-full bg-primary/10 pr-1.5 pl-3 text-xs font-semibold whitespace-nowrap text-primary">
       {children}
@@ -519,7 +597,7 @@ function ActiveChip({ children, onRemove }: { children: React.ReactNode; onRemov
         <X className="size-3" strokeWidth={3} />
       </button>
     </span>
-  )
+  );
 }
 
 function FilterLabel({ children }: { children: React.ReactNode }) {
@@ -527,5 +605,5 @@ function FilterLabel({ children }: { children: React.ReactNode }) {
     <span className="text-[11px] font-bold tracking-wider text-muted-foreground uppercase">
       {children}
     </span>
-  )
+  );
 }

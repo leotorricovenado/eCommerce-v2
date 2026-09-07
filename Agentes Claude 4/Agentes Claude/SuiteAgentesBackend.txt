@@ -1,0 +1,27 @@
+📁 crm-deal-<servicio>-service/
+├── CLAUDE.md
+└── .claude/
+    └── commands/
+        ├── 🚀 GENERACIÓN & CÓDIGO
+        │   ├── generate-schema.md      # Zod Schemas + types + nestjs-zod DTOs (.describe for Swagger)
+        │   ├── scaffold.md             # Módulo Hexagonal (domain/, application/, infrastructure/, interface/)
+        │   ├── wire-method.md          # Cableado con decoradores OpenAPI (@ApiOperation, @ApiResponse)
+        │   └── generate-mapper.md      # Mappers puros entre Domain Entities y DTOs de Zod
+        │
+        ├── 🧪 PRUEBAS & CALIDAD
+        │   ├── generate-tests.md       # Unit & E2E tests con Jest y mocks
+        │   ├── update-docs.md          # Sincronización y validación de especificación Swagger/OpenAPI
+        │   └── refactor-performance.md # Optimización N+1, asincronía y caché con Redis
+        │
+        ├── 🛡️ SEGURIDAD & REGLAS
+        │   ├── review-orm.md           # Estándares de TypeORM, transacciones y consultas parametrizadas
+        │   ├── review-security.md      # Auditoría OWASP Top 10 + Exit Code 1 para GitHub Actions
+        │   └── manage-migration.md     # Migraciones Flyway/TypeORM seguras con down() obligatorios
+        │
+        ├── 🩺 DIAGNÓSTICO
+        │   └── doctor.md               # Chequeo tsc, no-any, secrets, Zod DTOs, OWASP y Health Checks
+        │
+        └── 🔀 CONTROL DE VERSIONES
+            ├── git-commit.md           # Conventional Commits sobre staging
+            ├── git-pr.md               # Creación de Pull Requests (Trunk-Based)
+            └── git-flow.md             # Gestión de ramas cortas (feature/fix)

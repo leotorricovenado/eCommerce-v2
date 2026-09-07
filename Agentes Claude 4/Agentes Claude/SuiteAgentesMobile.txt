@@ -1,0 +1,23 @@
+📁 crm-deal-mobile/
+├── CLAUDE.md
+└── .claude/
+    └── commands/
+        ├── 🚀 GENERACIÓN MÓVIL
+        │   ├── generate-schema.md      # Esquemas Zod compatibles con SQLite y APIs
+        │   ├── scaffold-screen.md      # Pantallas Expo Router con SafeAreaView y navegación tipada
+        │   ├── scaffold-mobile-ui.md   # Componentes táctiles (Pressable, min 44pt) con NativeWind
+        │   └── generate-expo-service.md# Hooks para hardware/permisos (Camera, GPS) y SecureStore
+        │
+        ├── 🧪 CALIDAD & RENDIMIENTO
+        │   └── refactor-rn-perf.md     # Optimización con FlashList, expo-image y Reanimated
+        │
+        ├── 🛡️ SEGURIDAD MÓVIL
+        │   └── review-mobile-security.md# Auditoría SecureStore (prohibido AsyncStorage), FCM y biometría
+        │
+        ├── 🩺 DIAGNÓSTICO
+        │   └── doctor.md               # Chequeo tsc, SecureStore, motor offline SQLite y permisos Expo
+        │
+        └── 🔀 CONTROL DE VERSIONES
+            ├── git-commit.md           # Conventional Commits sobre staging
+            ├── git-pr.md               # Creación de Pull Requests (Trunk-Based)
+            └── git-flow.md             # Gestión de ramas cortas (feature/fix)

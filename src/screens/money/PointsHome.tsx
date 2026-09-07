@@ -1,17 +1,19 @@
-import { ArrowDownLeft, ArrowUpRight, CalendarClock, ChevronRight, Coins, Gift, Medal, ReceiptText, ShoppingBag, Sparkles, Truck } from "lucide-react"
+import { ArrowDownLeft, ArrowUpRight, CalendarClock, ChevronRight, Coins, Gift, Medal, ReceiptText, ShoppingBag, Target, Truck } from "lucide-react"
 import { Link } from "react-router"
 
 import { SectionHeader } from "@/components/home/SectionHeader"
 import { PointsPill, ProgressRing, TierBadge, formatPts } from "@/components/money/PointsUI"
 import { RedeemProductCard } from "@/components/money/RedeemProductCard"
-import { EARN_STRATEGIES, EXPIRY_MONTHS, redeemables } from "@/data/venadoMoney"
-import { EarnStrategyList } from "@/components/money/EarnStrategyList"
+import { EXPIRY_MONTHS, goalStatuses, redeemables } from "@/data/venadoMoney"
+import { GoalRow } from "@/components/money/GoalUI"
 import { formatShortDate } from "@/lib/dates"
 import { cn } from "@/lib/utils"
 import { usePoints } from "@/state/points"
 
 export function PointsHome() {
-  const { balance, tier, progress, movements, nextExpiry } = usePoints()
+  const { balance, tier, progress, movements, nextExpiry, goals } = usePoints()
+  const goalList = goalStatuses(goals)
+  const activeGoals = goalList.filter((g) => !g.done)
   const affordableFirst = [...redeemables].sort((a, b) => Number(b.points <= balance) - Number(a.points <= balance)).slice(0, 8)
 
   return (
@@ -63,9 +65,9 @@ export function PointsHome() {
       {/* Accesos */}
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
         {[
-          { to: "/puntos/canjear", icon: Gift, label: "Canjear", hint: `${redeemables.length} productos` },
+          { to: "/puntos/canjear", icon: Gift, label: "Canjear", hint: `${redeemables.length} productos y premios` },
           { to: "/puntos/extracto", icon: ReceiptText, label: "Extracto", hint: `${movements.length} movimientos` },
-          { to: "/puntos/como-sumar", icon: Sparkles, label: "Cómo sumar", hint: `${EARN_STRATEGIES.length} formas` },
+          { to: "/puntos/objetivos", icon: Target, label: "Objetivos", hint: `${activeGoals.length} en curso` },
           { to: "/puntos/niveles", icon: Medal, label: "Niveles", hint: tier.benefit },
         ].map(({ to, icon: Icon, label, hint }) => (
           <Link
@@ -92,15 +94,19 @@ export function PointsHome() {
         </div>
       </section>
 
-      {/* Productos que suman puntos */}
+      {/* Objetivos en curso: meta + progreso + premio (el cliente no ve la estrategia detrás) */}
       <section>
         <SectionHeader
-          title="Productos que suman puntos"
-          subtitle="Comprá estos y sumá Venado Money"
-          to="/puntos/como-sumar"
+          title="Tus objetivos"
+          subtitle="Se cumplen sumando tus compras · al lograrlos ganás puntos"
+          to="/puntos/objetivos"
           linkLabel="Ver todo"
         />
-        <EarnStrategyList strategies={EARN_STRATEGIES.slice(0, 3)} />
+        <div className="flex flex-col gap-2">
+          {(activeGoals.length > 0 ? activeGoals : goalList).slice(0, 3).map((status) => (
+            <GoalRow key={status.strategy.id} status={status} multiplier={tier.multiplier} />
+          ))}
+        </div>
       </section>
 
       {/* Movimientos */}
@@ -134,8 +140,9 @@ export function PointsHome() {
       <section className="flex flex-col gap-3 rounded-3xl bg-money/10 p-4 ring-1 ring-money/20">
         <h2 className="text-base">¿Cómo funciona?</h2>
         {[
-          { icon: ShoppingBag, text: "Sumás puntos comprando los productos de la lista: cada estrategia premia una cantidad de unidades." },
-          { icon: Sparkles, text: "Subís de nivel con los puntos acumulados y cada estrategia te rinde más." },
+          { icon: Target, text: "Cada objetivo tiene una meta en Bs sobre una marca, familia o categoría: llegás a la meta y ganás sus puntos." },
+          { icon: ShoppingBag, text: "Tus compras se van sumando hasta la meta: no hace falta cumplirla en un solo pedido." },
+          { icon: Medal, text: "Subís de nivel con los puntos acumulados y cada objetivo te rinde más." },
           { icon: Truck, text: "Canjeás productos desde el catálogo de canje: viajan en tu próximo pedido, sin costo en Bs." },
         ].map(({ icon: Icon, text }) => (
           <div key={text} className="flex items-start gap-3">
